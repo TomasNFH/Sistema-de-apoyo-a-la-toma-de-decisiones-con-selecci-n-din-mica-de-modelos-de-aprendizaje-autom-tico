@@ -1,46 +1,29 @@
 import eda
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
+from termcolor import colored
 
 def data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0):
-
     manualEDA, missing4rows = eda.ManualEDAfun(data)
 
     # drop ror & col by missing (%)
     drop_col = manualEDA[manualEDA['Missing (%)']>min_porcentage_col]['Column name'] 
     drop_row = missing4rows[missing4rows['Missing (%)']>min_porcentage_row]['Row id']
-    
-    print('\n-> Resultado de Data Cleaning:')
-    print('Cantidad de columnas eliminadas: '+
+    print(colored('\nResultado de Data Cleaning:', 'red', attrs=['bold']))
+    print(colored('  Cantidad de columnas eliminadas: '+
           str(len(drop_col))+
           ' ('+
           str( round(len(drop_col)/len(data.columns), 2) )+
-          '%)')
-    
-    print('Cantidad de filas eliminadas: '+
+          '%)', 'red'))
+    print(colored('  Cantidad de filas eliminadas: '+
           str(len(drop_row))+
           ' ('+
           str( round(len(drop_row)/len(data), 2) )+
-          '%)')
-#     print(len(data))
-#     print(len(data.columns))
-
+          '%)', 'red'))
     data = data.drop(drop_col, axis=1)
     data = data.drop(drop_row)
 
-    # dependiendo del rango de los datos hacer norm o no por columna
-    # Definir Xdata e ytrain antes con un select by index las columnas
-
-#     drop_target_col_values = scewed_target_col[scewed_target_col['Occurences (%)']<10]['Value'] 
-    
-#     for drop_val in drop_target_col_values:
-#         drop_row = data['Tipo_salida'][data['Tipo_salida']==drop_val].index
-#         data = data.drop(drop_row)
-
     return data
-
-#     data = data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0)
-
 
 def data_normF(data, FLAG=1):
     
