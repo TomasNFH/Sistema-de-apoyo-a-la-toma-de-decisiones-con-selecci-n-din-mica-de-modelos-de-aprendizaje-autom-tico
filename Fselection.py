@@ -37,7 +37,7 @@ def F_selector(X, y, N_features=5, FLAG=0):
             importances = importances.to_numpy()
             importances = np.abs(importances)
         imp_sorted = np.sort(importances)
-        importancesRET = imp_sorted
+        importancesRET = imp_sorted[len(importances)-N_features:]
         indexes = np.ones(0, dtype = int)
         #we run over the N_Features more importante and finde the index of each one
         for importance in imp_sorted[len(importances)-N_features:]: 

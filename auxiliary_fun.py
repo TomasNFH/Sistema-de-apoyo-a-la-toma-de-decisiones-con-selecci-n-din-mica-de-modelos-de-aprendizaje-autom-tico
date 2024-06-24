@@ -46,8 +46,13 @@ def model_dashboard(model_name, N_classes=2):
  
     return model
 
-def d_cast(DATA):
+def d_cast(DATA, TARGET_COLUMN, TARGET_TYPE):
     
+    #cast prediction column ONLY (COULD ADD A CONTINOUS CONDITION TO ENTER)
+    # breakpoint()
+    DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN)
+
+
     for column in DATA:    
         #if there is only one unique, we save the KEY and drop the column
         if len(DATA[column].unique()) == 1:
@@ -57,6 +62,6 @@ def d_cast(DATA):
             column_type = DATA[column].dtype
             #if the column contain string we cast it to int
             if column_type == 'object':
-                 DATA, uniqueVAL, id_unique = auxiliary_fun.unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
+                 DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
 
     return DATA
