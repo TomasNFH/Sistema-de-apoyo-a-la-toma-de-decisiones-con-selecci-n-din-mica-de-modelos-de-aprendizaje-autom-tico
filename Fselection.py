@@ -9,7 +9,6 @@ def F_selector(X, y, N_features=5, FLAG=0):
 
     #split data into train and test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=0)
-
     if FLAG == 2: #N_features is only for FLAG == 0 and 2
         efs = EFS(
             estimator=RandomForestClassifier(
@@ -40,7 +39,6 @@ def F_selector(X, y, N_features=5, FLAG=0):
         imp_sorted = np.sort(importances)
         importancesRET = imp_sorted
         indexes = np.ones(0, dtype = int)
-        
         #we run over the N_Features more importante and finde the index of each one
         for importance in imp_sorted[len(importances)-N_features:]: 
             idx = np.where(importances == importance)[0][0]

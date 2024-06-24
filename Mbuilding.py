@@ -8,12 +8,11 @@ from sklearn.metrics import confusion_matrix
 from termcolor import colored
 import matplotlib.pyplot as plt 
 import seaborn as sns
-
 from sklearn.utils import resample
 from sklearn.metrics import accuracy_score
 
 
-def model_shake(DATA, PREDICTED_CL, TARGET_TY, Fast = 1):
+def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
 
     number_of_splits = 5    
     model_return = pd.DataFrame(columns = ['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Features used', 'Number of splits', 'Confusion matrix', 'Sensitivity', '100-Specifity', 'Recall', 'F1 score', 'Score'])
@@ -22,7 +21,6 @@ def model_shake(DATA, PREDICTED_CL, TARGET_TY, Fast = 1):
     if Fast:
         FEATURE_FLAGS = np.array([0,1])
     FEATURE_N = 5 #can test to change it or make it auto to find the best N
-    
     if TARGET_TY == 'boolean':
         model_stack = ['RandomForestClassifier', 'LogisticRegression', 'KNeighborsClassifier', 'SupportVectorMachines']
         NORM_FLAGS = np.array([0])
@@ -35,21 +33,18 @@ def model_shake(DATA, PREDICTED_CL, TARGET_TY, Fast = 1):
 
     ### Step 1: Feature Engeeniring ###
     for F_FLAG in FEATURE_FLAGS:
-        X = DATA.loc[:, DATA.columns != PREDICTED_CL]
-        y = DATA[PREDICTED_CL]
+        X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
+        y = DATA[TARGET_COLUMN]
         X_Reduced, current_Features, importances = Fselection.F_selector(X, y, N_features=FEATURE_N, FLAG=F_FLAG) #PQ MANDO Y TAMBIEN?
 
         # #bootstraping in we have not enough samples
         # # the idea is to use bootstraping in the training data
         # # BOOTSTRAPING PARA Q SEA EFECTIVO LO TENGO Q HACER MUCHAS VECES
-
         #OTRA IDEA ES USAR SIEMPRE BOOTSREPING SIN IMPORTAR EL NRO DE MUESTRAS 
-
         # min_number_of_traing_samples = 100
         # if len(X) <= min_number_of_traing_samples:
         #     X, y = resample(X, y, n_samples=min_number_of_samples,replace=True) 
         # breakpoint()
-
 
         ### Step 2: Cross Validation ###
         #suffle the data
@@ -111,7 +106,7 @@ def model_shake(DATA, PREDICTED_CL, TARGET_TY, Fast = 1):
                             Specifity = TN/np.sum(TN_FP)
                             Specifity = (1-Specifity)*100
                             F1 = 2*(accurecy*Recall)/((accurecy+Recall))
-                    model_return.loc[len(model_return.index)] = [PREDICTED_CL, TARGET_TY, model_name, N_FLAG, F_FLAG, current_Features, number_of_splits, CoMtx, accurecy, Specifity, Recall, F1, model.score(X_test, y_test)] 
+                    model_return.loc[len(model_return.index)] = [TARGET_COLUMN, TARGET_TY, model_name, N_FLAG, F_FLAG, current_Features, number_of_splits, CoMtx, accurecy, Specifity, Recall, F1, model.score(X_test, y_test)] 
 
     #show results
     if TARGET_TY == 'boolean':
