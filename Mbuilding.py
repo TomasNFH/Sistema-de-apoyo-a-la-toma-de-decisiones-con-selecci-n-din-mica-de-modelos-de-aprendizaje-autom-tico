@@ -9,7 +9,6 @@ from termcolor import colored
 import matplotlib.pyplot as plt 
 import seaborn as sns
 from sklearn.utils import resample
-from sklearn.metrics import accuracy_score
 
 
 def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
@@ -99,7 +98,29 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
                     # print((X_train))
                     # print((y_train))
                     model.fit(X_train, y_train)
+
+                    ###PARAG
+                    name = 'PEPE'
+                    results = {}
+                    confusion_matrices = {}
+                    roc_curves = {}
+                    metrics_result = auxiliary_fun.computemetrics(model, X_test, y_test)
+                    # breakpoint()
+                    #Plot ROC curve
                     prediction = model.predict(X_test)
+
+                    plt.figure(figsize=(8, 6))
+                    plt.plot(metrics_result['roc_curve'][0], metrics_result['roc_curve'][1], color='darkorange', lw=2, label=f'ROC curve (AUC = {metrics_result["roc_curve"][2]:.2f})')
+                    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+                    plt.xlim([0.0, 1.0])
+                    plt.ylim([0.0, 1.05])
+                    plt.xlabel('False Positive Rate')
+                    plt.ylabel('True Positive Rate')
+                    plt.title(f'{name} - Receiver Operating Characteristic')
+                    plt.legend(loc="lower right")
+                    plt.show()
+                    # breakpoint()
+                    ###PARAG
 
                     # # bootstrap predictions (REVISAR BIEN ANTES DE IMPLEMENTAR BIEN)
                     # accuracy_bootstrap = []

@@ -13,13 +13,17 @@ def data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0):
     print(colored('\nResultado de Data Cleaning:', 'red', attrs=['bold']))
     print(colored('  Cantidad de columnas eliminadas: '+
           str(len(drop_col))+
+          ' of '+
+          str(len(data.columns))+
           ' ('+
-          str( round(len(drop_col)/len(data.columns), 2) )+
+          str( round(len(drop_col)/len(data.columns)*100, 2) )+
           '%)', 'red'))
     print(colored('  Cantidad de filas eliminadas: '+
           str(len(drop_row))+
+          ' of '+
+          str(len(data))+
           ' ('+
-          str( round(len(drop_row)/len(data), 2) )+
+          str( round(len(drop_row)/len(data)*100, 2) )+
           '%)', 'red'))
     data = data.drop(drop_col, axis=1)
     data = data.drop(drop_row)

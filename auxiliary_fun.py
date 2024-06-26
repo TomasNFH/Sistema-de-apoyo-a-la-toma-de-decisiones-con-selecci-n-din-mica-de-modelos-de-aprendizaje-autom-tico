@@ -5,6 +5,11 @@ from sklearn import linear_model, svm
 from sklearn.neighbors import KNeighborsClassifier
 # from sklearn import svm/
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+from sklearn import metrics
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay 
+
 
 
 def unique_to_int(data_in, column_name):
@@ -65,3 +70,38 @@ def d_cast(DATA, TARGET_COLUMN, TARGET_TYPE):
                  DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
 
     return DATA
+
+
+def computemetrics(model, X_test, y_test):
+
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    report = classification_report(y_test, y_pred, output_dict=True)
+    cm = confusion_matrix(y_test, y_pred)
+
+    #Compute ROC curve and AUC
+    if hasattr(model, 'decision_function'):
+        y_score = model.decision_function(X_test)
+    else:
+        y_score = model.predict_proba(X_test)[:, 1]
+
+    fpr, tpr, _  = metrics.roc_curve(y_test, y_score)
+    roc_auc = metrics.auc(fpr, tpr)
+    # breakpoint()
+
+    #Handle missing class '1' in classification_report
+    if '1' in report:
+        precision = report['1']['precision']
+        recall = report['1']['recall']
+        f1 = report['1']['f1-score']
+    else:
+        precision = recall = f1 = None
+
+    return {
+        'accuracy': accuracy,
+        'precision': precision,
+        'recall': recall,
+        'f1': f1,
+        'confusion_matrix': cm,
+        'roc_curve': (fpr, tpr, roc_auc)
+    }
