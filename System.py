@@ -13,6 +13,7 @@ def dyn_model_selection(file_selected=-1, column_selected=-1):
     
         ### Step 1: Data acquisition ###
     data = Dacquisition.d_acquisition(file_selected)
+    # breakpoint()
     data, target_column, target_type, scewed_target_col = Dacquisition.var_acquisition(data, column_selected, CHECK=True) #tema de dataNaN y dataCLEAN juntar
                                                                     #tipo requirements que se hacen en el main antes de entrar a SYSTEM
     #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
@@ -24,11 +25,11 @@ def dyn_model_selection(file_selected=-1, column_selected=-1):
     print(colored(manualEDA, 'red'))
     print(colored('\nTable with information of the rows:', 'red', attrs=['bold']))
     print(colored(missing4rows, 'red'))
-    print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
     
         ### Step 2: Data Cleaning ###    
     #min_porcentage_col if missing>10 for a column, we drop it
     data = DprepNcleaning.data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0)
+    print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
 
         ### Step 3.2: Exploratory Data Analyzis (AUTO)###
     dtale.show(data) #hacerle decast !!!!!

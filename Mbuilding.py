@@ -16,8 +16,8 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
     model_return = pd.DataFrame(columns = ['Target column', 'Taget type', 'Model name', 
                                            'Normalization method', 'Feature selection method', 
                                            'Features used', 'Number of splits', 'Cross-validation ID', 
-                                           'Confusion matrix', 'Sensitivity', '100-Specifity', 'Recall', 
-                                           'F1 score', 'Score'])
+                                           'Confusion matrix', 'True Positive Rate', 'False Positive Rate', 'Recall', 
+                                           'F1 score', 'AUC', 'Score'])
     NORM_FLAGS = np.array([0,1,2])
     FEATURE_FLAGS = np.array([0,1,2]) #dont use 2 due to time
     if Fast:
@@ -35,14 +35,14 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
 
     ### Step 1: Feature Engeeniring ###
     for F_FLAG in FEATURE_FLAGS:
-    
+        # breakpoint()
         X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
         y = DATA[TARGET_COLUMN]
         X, current_Features, importances = Fselection.F_selector(X, y, N_features=FEATURE_N, FLAG=F_FLAG) #PQ MANDO Y TAMBIEN?
 
-        print(colored('\nThe Features used with this model where', 'green', attrs=['bold']))
-        print(colored(list(current_Features), 'green'))
-        print(colored(list(importances), 'green'))
+        # print(colored('\nThe Features used with this model where', 'green', attrs=['bold']))
+        # print(colored(list(current_Features), 'green'))
+        # print(colored(list(importances), 'green'))
 
         # std = np.std([tree.feature_importances_ for tree in forest.estimators_], axis=0)
         forest_importances = pd.Series(importances, index=current_Features)
@@ -94,33 +94,10 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
                     # DATA = DprepNcleaning.data_normF(DATA, FLAG=N_FLAG)  #NO LE ESTOY HACIENDO NORM A NADA
                     ### Step 5: Model Building 
                     model = auxiliary_fun.model_dashboard(model_name)
-                    # print('/n/n\n\n')
-                    # print((X_train))
-                    # print((y_train))
+
                     model.fit(X_train, y_train)
-
-                    ###PARAG
-                    name = 'PEPE'
-                    results = {}
-                    confusion_matrices = {}
-                    roc_curves = {}
-                    metrics_result = auxiliary_fun.computemetrics(model, X_test, y_test)
-                    # breakpoint()
-                    #Plot ROC curve
                     prediction = model.predict(X_test)
-
-                    plt.figure(figsize=(8, 6))
-                    plt.plot(metrics_result['roc_curve'][0], metrics_result['roc_curve'][1], color='darkorange', lw=2, label=f'ROC curve (AUC = {metrics_result["roc_curve"][2]:.2f})')
-                    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-                    plt.xlim([0.0, 1.0])
-                    plt.ylim([0.0, 1.05])
-                    plt.xlabel('False Positive Rate')
-                    plt.ylabel('True Positive Rate')
-                    plt.title(f'{name} - Receiver Operating Characteristic')
-                    plt.legend(loc="lower right")
-                    plt.show()
                     # breakpoint()
-                    ###PARAG
 
                     # # bootstrap predictions (REVISAR BIEN ANTES DE IMPLEMENTAR BIEN)
                     # accuracy_bootstrap = []
@@ -134,9 +111,12 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
                     #     accuracy_bootstrap.append(score)
                     # # de esto tengo q sacar info de la distribucion de probabilidad
                     
-                    ###
+                    ### define values in case we dont estimeate them (continues case 4 example)
                     accurecy = np.nan
                     Specifity = np.nan
+                    tpr = np.nan
+                    fpr = np.nan
+                    auc = np.nan
                     Recall = np.nan
                     F1 = np.nan
                     CoMtx = np.nan
@@ -157,11 +137,22 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
                             Specifity = TN/np.sum(TN_FP)
                             Specifity = (1-Specifity)*100
                             F1 = 2*(accurecy*Recall)/((accurecy+Recall))
-                    model_return.loc[len(model_return.index)] = [TARGET_COLUMN, TARGET_TY, model_name, N_FLAG, F_FLAG, current_Features, number_of_splits, shift_idx, CoMtx, accurecy, Specifity, Recall, F1, model.score(X_test, y_test)] 
+
+                            #PARAG
+                            metrics_result = auxiliary_fun.computemetrics(model, X_test, y_test)
+                            tpr = metrics_result['roc_curve'][1]
+                            fpr = metrics_result['roc_curve'][0]
+                            auc = metrics_result['roc_curve'][2]
+
+
+                    model_return.loc[len(model_return.index)] = [TARGET_COLUMN, TARGET_TY, model_name, 
+                                                                 N_FLAG, F_FLAG, current_Features, 
+                                                                 number_of_splits, shift_idx, CoMtx, 
+                                                                 tpr, fpr, Recall, F1, auc, model.score(X_test, y_test)] 
     #show results
     if TARGET_TY == 'boolean':
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
-        print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'Sensitivity', '100-Specifity', 'Recall', 'F1 score', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
+        print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'True Positive Rate', 'False Positive Rate', 'Recall', 'F1 score', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
 
         print(colored('\nThe results for the best model (based in Score):', 'green', attrs=['bold']))
         MAX_idx = model_return['Score'].idxmax()
@@ -176,24 +167,51 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         # print(colored(list(best_model_res['Features used']), 'green'))
         
 
-        graph = sns.lmplot(model_return, x= "100-Specifity", y="Sensitivity", hue='Model name', col="Model name", palette="crest", ci=None,height=4, scatter_kws={"s": 100, "alpha": 1})
-        graph.fig.subplots_adjust(top=0.9) # adjust the Figure in rp
-        graph.fig.suptitle('ROC for the models')
-        plt.xlim(0,100)
-        plt.ylim(0,100)
-        plt.show()
+
+
+
+
+        #AGREGAR ACA LAS GRAFICAS ROCCCCC
+        number_of_models = len(model_return['Model name'].unique())
+        grouped_by_model = model_return.groupby('Model name')
+        plt.figure()
+        model_idx = 0
+        # print(sns.color_palette("mako").as_hex())   
+        for model_name_loop in model_return['Model name'].unique():
+            print(model_idx)
+            current_model_data = grouped_by_model.get_group(model_name_loop)
+            for index, row in current_model_data.iterrows():
+                plt.subplot(1,4,model_idx+1)
+                plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row['AUC']:.2f})')
+                plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+                plt.xlim([0.0, 1.0])
+                plt.ylim([0.0, 1.05])
+                plt.xlabel('False Positive Rate')
+                plt.ylabel('True Positive Rate')
+                plt.title(f'{row['Model name']} - Receiver Operating Characteristic')
+                plt.legend(loc="lower right")
+            model_idx = model_idx+1
+                
+
+        # graph = sns.lmplot(model_return, x= "False Positive Rate", y="True Positive Rate", hue='AUC', col="Model name", palette="crest", ci=None,height=4, scatter_kws={"s": 100, "alpha": 1})
+        # # graph = sns.lmplot(model_return, x= "100-Specifity", y="Sensitivity", hue='Model name', col="Model name", palette="crest", ci=None,height=4, scatter_kws={"s": 100, "alpha": 1})
+        # graph.fig.subplots_adjust(top=0.9) # adjust the Figure in rp
+        # graph.fig.suptitle('ROC for the models')
+        # plt.xlim(0,100)
+        # plt.ylim(0,100)
+        # plt.show()
     if TARGET_TY == 'classes':
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
-        print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'Sensitivity', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
+        print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'True Positive Rate', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
 
         print(colored('\nThe results for the best model (based in Score):', 'green', attrs=['bold']))
         MAX_idx = model_return['Score'].idxmax()
         best_model_res = model_return.iloc[MAX_idx]
-        print(colored('\nConfusion matrix:', 'green', attrs=['bold']))
+        # print(colored('\nConfusion matrix:', 'green', attrs=['bold']))
          
-        print(colored(pd.DataFrame(best_model_res['Confusion matrix (where the true values are in the rows and the predicted in the columns)'], columns=classes_of_target, index=classes_of_target), 'green'))
-        print(colored('\nThe Features used with this model where', 'green', attrs=['bold']))
-        print(colored(list(best_model_res['Features used']), 'green'))
+        # print(colored(pd.DataFrame(best_model_res['Confusion matrix (where the true values are in the rows and the predicted in the columns)'], columns=classes_of_target, index=classes_of_target), 'green'))
+        # print(colored('\nThe Features used with this model where', 'green', attrs=['bold']))
+        # print(colored(list(best_model_res['Features used']), 'green'))
 
     if TARGET_TY == 'continuous':
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))

@@ -25,6 +25,8 @@ def data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0):
           ' ('+
           str( round(len(drop_row)/len(data)*100, 2) )+
           '%)', 'red'))
+    # print(data.olumns[drop_col])
+    breakpoint()
     data = data.drop(drop_col, axis=1)
     data = data.drop(drop_row)
 

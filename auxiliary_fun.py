@@ -13,13 +13,18 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 
 def unique_to_int(data_in, column_name):
-
+    breakpoint()
     dataF = pd.DataFrame(data_in, columns=data_in.columns)
     uniqueVAL = dataF[column_name].unique()
     id_unique = np.arange(len(uniqueVAL))
-    for idU, val in enumerate(uniqueVAL):
+    for idU, val in enumerate(np.sort(uniqueVAL)):
+        breakpoint()
         dataF[column_name] = dataF[column_name].apply(lambda x: idU if x == val else x)
-    
+        #tengo un problema, ti convierto todos los 1 en 0 
+            #si tenia 0, ahora al reconvertirlos en 1 me queda 
+
+        #en general puedo tener el problema de castear valores que ya habia casteado
+            #tengo q asegurarme que los id_unique no tengan match con uniqueVAL
     return dataF, uniqueVAL, id_unique
 
 
@@ -55,12 +60,14 @@ def d_cast(DATA, TARGET_COLUMN, TARGET_TYPE):
     
     #cast prediction column ONLY (COULD ADD A CONTINOUS CONDITION TO ENTER)
     # breakpoint()
-    DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN)
-
+    DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
 
     for column in DATA:    
         #if there is only one unique, we save the KEY and drop the column
         if len(DATA[column].unique()) == 1:
+            print('D_cast')
+            print(column)
+            print(DATA[column].unique())
             unique_val = DATA[column][0] #preparar para recuperar para el final del modelado (guardar en un df)
             DATA = DATA.drop(column, axis=1)
         else: #if we drop we cant acces the colum type    
