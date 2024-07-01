@@ -98,7 +98,7 @@ def var_acquisition(DATA, COLUMN_SELECTED_IDX=-1, CHECK=True):
         if scewed_check: #if TRUE we cast to boolean
             TARGET_TYPE = 'boolean'
             for drop_val in drop_target_col_values:
-                drop_row = DATA['Tipo_salida'][DATA['Tipo_salida']==drop_val].index
+                drop_row = DATA['Tipo_salida'][DATA['Tipo_salida']==drop_val].index ####arrregalarrrrrrrrrrr!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DATA = DATA.drop(drop_row)
                 
     ### 3.2 Coff of unique check     
