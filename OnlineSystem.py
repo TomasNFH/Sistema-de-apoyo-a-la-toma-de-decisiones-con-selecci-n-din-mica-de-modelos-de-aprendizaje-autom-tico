@@ -59,40 +59,31 @@ def var_acquisition(column_name):
         ###In the case that values concentrate in only two values and we have something to drop <unque!=2>, ask if the user want to drop the columns that dont have much samples (making it a boolean) 
         if len(target_col_values) == 2 and len(unique_values)!=2:
             LEN_SCEWED_2 = gr.State(1)
-            print('changed state od len scewed 2')
-
-        # print(LEN_SCEWED_2)
 
     return f"You have selected the column: {TARGET_TYPE}"
 
 def check_selection(selection):
     global CHECK
+    global check_disable
+
     CHECK = selection
-    print(CHECK)
+    check_disable = gr.State(1)
     return CHECK
 
 
 def scewed_selection(selection):
-    # global CHECK
-    # CHECK = selection
+
     global DATA
     global TARGET_TYPE
     global TARGET_COLUMN
     global drop_target_col_values
 
-    print('\n\nscewed sssss')
-    print(selection)
     if selection == "Yes":
-        print('CASTEOOOOO NAZZZZIII')
         TARGET_TYPE = 'boolean'
         for drop_val in drop_target_col_values:
             drop_row = DATA[TARGET_COLUMN][DATA[TARGET_COLUMN]==drop_val].index
             DATA = DATA.drop(drop_row)
 
-
-
-    else:
-        print('notttt')
     return CHECK
 
 def disable_buttons(selection):
@@ -101,27 +92,54 @@ def disable_buttons(selection):
 
 # FLAG_UPLOAD_FILE = False
 with gr.Blocks() as upload_fileTAB:
+    global target_flag
+    global check_disable
+
+    print('gr BLOCK entry')
     target_flag = gr.State(0) #if is 0, we dont enter in target selection in the TAB
     len_sc_2 = gr.State(0)
+    #A FLAG that is used to disable CHECK gr.Radio
+    check_disable = gr.State(0)
 
     gr.Markdown("## Upload dataset and select target column")
     data = gr.File(label="Upload CSV / XLSX file", type="filepath") #data id the file uploaded
-    # Set the function to be called when the data value changes
-    data.change(d_acquisition, data, gr.Textbox(label="The head of the dataset is:"))
 
-    target_btn = gr.Button("Select target (after upload of dataset)")
-    target_btn.click(lambda count: count + 1, target_flag, target_flag)
-    # @gr.render(inputs=data)
+    #ENTERS ONLY IF data CHANGES
+    @gr.render(inputs=[data])
+    def show_split(FILE):
+        global DATA
+        global VARIABLES_OF_DATA
+        global target_flag
+
+        print('entered to render of data flag')
+        if FILE != None: #enter if a file is loaded
+            global DATA
+            global VARIABLES_OF_DATA
+            if FILE.name[len(FILE.name)-5:] == '.xlsx':
+                DATA = pd.read_excel(FILE.name)
+            if FILE.name[len(FILE.name)-4:] == '.csv':
+                DATA = pd.read_csv(FILE.name)
+            VARIABLES_OF_DATA = DATA.columns #used in target column acq
+            gr.Textbox(DATA.head(), label="The head of the dataset is:")
+
+            target_btn = gr.Button("Select target (after upload of dataset)")
+            target_btn.click(lambda count: count + 1, target_flag, target_flag)
+ 
+    @gr.render(inputs=[check_disable])
+    def show_split(CD_FLAG):
+        print('entered to check od terget flag')
+
     @gr.render(inputs=[target_flag])
     def show_split(TARGET_FLAG):
-        print('entered to render')
+        print('entered to render od terget flag')
         if TARGET_FLAG==0:
             gr.Markdown(" ")
         if TARGET_FLAG>0:
             target_check_btn = gr.Radio(["Yes", "No"], label="User check of auto detection of target column:", value="Yes")
             target_check_btn.change(fn=check_selection, inputs=target_check_btn, outputs=None)
-            # print(CHECK)
-
+            # target_check_btn = gr.Radio(["Yes", "No"], label="User check of auto detection of target column:", value="No", interactive= False)
+            # print('check disable')
+            # print(check_disable)
             gr.Markdown("Select a variable to predict ")
             # gr.Dropdown(list(var_acquisition), label="Please select the varaible to predict from the next list: ")
             column_dropdown = gr.Dropdown(list(VARIABLES_OF_DATA), label="Please select the varaible to predict from the next list: ")
@@ -135,14 +153,12 @@ with gr.Blocks() as upload_fileTAB:
 
     @gr.render(inputs=[len_sc_2, target_flag])
     def scewed_data_cast(LEN_SCEWED_2_RENDER, TARGET_FLAG):
-        print('entr render 2')
-        # global TARGET_FLAG
+        print('entr render of len scewed')
 
         # if TARGET_FLAG>1: #hacer q aparesca despues de scewed menu 
             # gr.Label(f"The target type is: {TARGET_TYPE}")
 
         if LEN_SCEWED_2_RENDER==1:
-            print('cast??')
             scewed_yes_no_btn = gr.Radio(["Yes", "No"], label="Cast to boolean (once selected there is no undo):")
             scewed_yes_no_btn.change(fn=scewed_selection, inputs=scewed_yes_no_btn, outputs=None) #here we cast DATA (when the button is press there is not way back)
             # scewed_yes_no_btn.change(fn=disable_buttons, inputs=scewed_yes_no_btn, outputs=gr.Label())
