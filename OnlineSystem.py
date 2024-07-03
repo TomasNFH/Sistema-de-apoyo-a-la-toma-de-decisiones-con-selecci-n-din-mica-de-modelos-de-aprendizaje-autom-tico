@@ -10,18 +10,6 @@ import numpy as np
 import cutie
 
 ######### Dynamic seleccion of machine learning models #########
-# def d_acquisition(FILE):
-
-#     global DATA
-#     global VARIABLES_OF_DATA
-#     if FILE.name[len(FILE.name)-5:] == '.xlsx':
-#         DATA = pd.read_excel(FILE.name)
-#     if FILE.name[len(FILE.name)-4:] == '.csv':
-#         DATA = pd.read_csv(FILE.name)
-#     VARIABLES_OF_DATA = DATA.columns #used in target column acq
-    
-#     return DATA.head()
-
 def var_acquisition(column_name):
 
     global DATA
@@ -92,14 +80,15 @@ def scewed_selection(selection):
 
 # FLAG_UPLOAD_FILE = False
 with gr.Blocks() as upload_fileTAB:
-    global target_flag
-    global check_disable
+    # global target_flag
+    global check_disable_RFLAG
 
     print('0 - gr BLOCK entry')
-    target_flag = gr.State(0) #if is 0, we dont enter in target selection in the TAB
-    len_sc_2 = gr.State(0)
+    # target_flag = gr.State(0) #if is 0, we dont enter in target selection in the TAB
+    # len_sc_2 = gr.State(0)
+    column_dropdown_RFLAG = gr.State(0)
     #A FLAG that is used to disable CHECK gr.Radio
-    check_disable = gr.State(0)
+    check_disable_RFLAG = gr.State(0)
 
     gr.Markdown("## Upload dataset and select target column")
     data = gr.File(label="Upload CSV / XLSX file", type="filepath") #data id the file uploaded
@@ -109,9 +98,10 @@ with gr.Blocks() as upload_fileTAB:
     def show_split(FILE):
         global DATA
         global VARIABLES_OF_DATA
-        global target_flag
+        global check_disable_RFLAG
+        global target_check_btn
+        print('1 - Entered to render of auto detection check <DATA>')
 
-        print('1 - Entered to render <DATA>')
         #enter if a file is loaded (define DATA and its columns Variables_OF_DATA)
         if FILE != None: 
             print('FILE != None')
@@ -124,36 +114,20 @@ with gr.Blocks() as upload_fileTAB:
             VARIABLES_OF_DATA = DATA.columns #used in target column acq
             gr.Textbox(DATA.head(), label="The head of the dataset is:")
 
-            target_btn = gr.Button("Select target (after upload of dataset)")
-            target_btn.click(lambda count: count + 1, target_flag, target_flag)
-
-    @gr.render(inputs=[target_flag])
-    def show_split(TARGET_FLAG):
-        global check_disable
-        global target_check_btn
-
-        print('2 - Render <SELECT TARGET>')
-
-        print('check disable')
-        print(check_disable)
-        # if TARGET_FLAG==0:
-            # gr.Markdown(" ")
-        if TARGET_FLAG>0:
-            print('TARGET_FLAG>0')
             target_check_btn = gr.Radio(["Yes", "No"], label="User check of auto detection of target column:")
-            #change CHECH when press
+            #change CHECK when press
             target_check_btn.input(fn=check_selection, inputs=target_check_btn, outputs=None)
-            #change check_disable <for dissable of the button funcionality>
-            target_check_btn.input(lambda count: count + 1, check_disable, check_disable, scroll_to_output=True)
-            print('print(target_check_btn)')
-            print(target_check_btn)
+            #change check_disable_RFLAG <for dissable of the button funcionality>
+            target_check_btn.input(lambda count: count + 1, check_disable_RFLAG, check_disable_RFLAG, scroll_to_output=True)
+            # print('print(target_check_btn)')
+            # print(target_check_btn)
 
-    @gr.render(inputs=[check_disable])
+    @gr.render(inputs=[check_disable_RFLAG])
     def show_split(CHECK_DISABLE):
 
         global target_check_btn
         global VARIABLES_OF_DATA
-        print('3 - Entered to render <DISABLE FLAG>')
+        print('2 - Entered to render of target selection <DISABLE FLAG>')
 
         #enters when we select if we want the user verification of the target type
         if CHECK_DISABLE>0:
@@ -164,18 +138,19 @@ with gr.Blocks() as upload_fileTAB:
             #filterable container
             # Set the function to be called when the dropdown value changes
             column_dropdown.change(fn=var_acquisition, inputs=column_dropdown, outputs=None, scroll_to_output=True)
+            column_dropdown.input(lambda count: count + 1, column_dropdown_RFLAG, column_dropdown_RFLAG, scroll_to_output=True)
 
-            check_type_btn = gr.Button("Check the target type (after upload of dataset)")
-            check_type_btn.click(lambda count: count + 1, len_sc_2, len_sc_2, scroll_to_output=True)
+            # check_type_btn = gr.Button("Check the target type (after upload of dataset)")
+            # check_type_btn.click(lambda count: count + 1, len_sc_2, len_sc_2, scroll_to_output=True)
 
-    @gr.render(inputs=[len_sc_2, target_flag])
-    def scewed_data_cast(LEN_SCEWED_2_RENDER, TARGET_FLAG):
-        print('4 - Enter to render <SCEWED>')
+    @gr.render(inputs=[column_dropdown_RFLAG])
+    def scewed_data_cast(LEN_SCEWED_2_RENDER):
+        print('3 - Enter to render <SCEWED>')
 
         # if TARGET_FLAG>1: #hacer q aparesca despues de scewed menu 
             # gr.Label(f"The target type is: {TARGET_TYPE}")
 
-        if LEN_SCEWED_2_RENDER==1:
+        if LEN_SCEWED_2_RENDER>1: #add other condition
             scewed_yes_no_btn = gr.Radio(["Yes", "No"], label="Cast to boolean (once selected there is no undo):")
             scewed_yes_no_btn.change(fn=scewed_selection, inputs=scewed_yes_no_btn, outputs=None) #here we cast DATA (when the button is press there is not way back)
             # scewed_yes_no_btn.change(fn=disable_buttons, inputs=scewed_yes_no_btn, outputs=gr.Label())
