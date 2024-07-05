@@ -13,12 +13,12 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 
 def unique_to_int(data_in, column_name):
-    breakpoint()
+
     dataF = pd.DataFrame(data_in, columns=data_in.columns)
     uniqueVAL = dataF[column_name].unique()
     id_unique = np.arange(len(uniqueVAL))
     for idU, val in enumerate(np.sort(uniqueVAL)):
-        breakpoint()
+
         dataF[column_name] = dataF[column_name].apply(lambda x: idU if x == val else x)
         #tengo un problema, ti convierto todos los 1 en 0 
             #si tenia 0, ahora al reconvertirlos en 1 me queda 
