@@ -34,6 +34,8 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         # model_stack = ['LinearRegression'] #in the case 
 
     ### Step 1: Feature Engeeniring ###
+    IMPORTANCES_OUT = []
+    CURRENT_FEATURES_OUT = []
     for F_FLAG in FEATURE_FLAGS:
         # breakpoint()
         X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
@@ -43,7 +45,8 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         # print(colored('\nThe Features used with this model where', 'green', attrs=['bold']))
         # print(colored(list(current_Features), 'green'))
         # print(colored(list(importances), 'green'))
-
+        IMPORTANCES_OUT.append(importances)
+        CURRENT_FEATURES_OUT.append(current_Features)
         # std = np.std([tree.feature_importances_ for tree in forest.estimators_], axis=0)
         forest_importances = pd.Series(importances, index=current_Features)
         fig, ax = plt.subplots()
@@ -217,6 +220,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
         print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
 
-    return model_return
+    return model_return, IMPORTANCES_OUT, CURRENT_FEATURES_OUT
 
 

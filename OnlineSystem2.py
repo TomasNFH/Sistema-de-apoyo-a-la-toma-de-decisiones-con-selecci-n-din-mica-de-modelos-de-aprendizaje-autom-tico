@@ -7,6 +7,7 @@ import static_frame as sf
 from termcolor import colored
 import numpy as np
 import cutie
+import matplotlib.pyplot as plt
 
 
 import DprepNcleaning
@@ -91,6 +92,23 @@ def calculate_square(number):
     return number ** 2
 
 
+def plot_function(x):
+    # Create a simple plot
+    x_vals = np.linspace(0, 10, 100)
+    y_vals = np.sin(x_vals * float(x))
+    
+    plt.figure()
+    plt.plot(x_vals, y_vals, label=f'sin({x} * x)')
+    plt.xlabel('x')
+    plt.ylabel('sin(x)')
+    plt.title(f'Sine Wave with Frequency {x}')
+    plt.legend()
+    
+    # Save the plot to a file
+    plt.savefig('plot.png')
+    plt.close()
+    
+    return 'plot.png'
 
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
@@ -104,9 +122,10 @@ with gr.Blocks() as demo:
     with gr.Tabs():
         print(colored('outside','red'))
         DATAcasted = 'Not uploaded'
-        with gr.Tab(label="1 tab"):
+        with gr.Tab(label="Data acquisition and cleaning"):
+
             print(colored('1 tab','red'))
-            print('\nInitialize -> gr.BLOCK \n')
+            # print('\nInitialize -> gr.BLOCK \n')
             # define FLAGS for render order
             column_dropdown_RFLAG = gr.State(0)
             target_check_RFLAG = gr.State(0) #need to be global?
@@ -117,12 +136,14 @@ with gr.Blocks() as demo:
 
             @gr.render(inputs=[data])
             def show_split(FILE):
-
-                print('1 - Entered to render of auto detection check <DATA>')
+                
+                # global DATA_cleaned 
+                # DATA_cleaned = 1
+                # print('1 - Entered to render of auto detection check <DATA>')
                 #enter if a file is loaded (define DATA and its columns Variables_OF_DATA)
                 if FILE != None: 
 
-                    print('----FILE != None')
+                    # print('----FILE != None')
                     global DATA
                     global VARIABLES_OF_DATA
                     global target_check_RFLAG 
@@ -145,11 +166,10 @@ with gr.Blocks() as demo:
             @gr.render(inputs=[target_check_RFLAG])
             def show_split(TARGET_CHECK):
 
-                print('2 - Entered to render of target selection <TARGET CHECK>')
+                # print('2 - Entered to render of target selection <TARGET CHECK>')
                 #enters when we select if we want the user verification of the target type
                 if TARGET_CHECK>0:
-                    print('----TARGET_CHECK>0')
-                    print(DATA) 
+                    # print('----TARGET_CHECK>0')
                     gr.Markdown("Select a variable to predict ")
                     column_dropdown = gr.Dropdown(list(VARIABLES_OF_DATA), label="Please select the varaible to predict from the next list: ", filterable=False)
                     #filterable container
@@ -161,10 +181,9 @@ with gr.Blocks() as demo:
             def scewed_data_cast(column_dropdown):
 
                 SCEWED_FLAG = False
-                print('4 - Enter to render of type detection <CLUMN DROPDOWN>')
+                # print('4 - Enter to render of type detection <CLUMN DROPDOWN>')
                 if column_dropdown>1:
-                    print(colored('---column_dropdown activate', 'red'))
-                    print(colored(DATA, 'red'))
+                    # print(colored('---column_dropdown activate', 'red'))
                     
 
                     global drop_target_col_values #for scewed function
@@ -181,14 +200,9 @@ with gr.Blocks() as demo:
                     ###In the case that values concentrate in only two values and we have something to drop <unque!=2>, ask if the user want to drop the columns that dont have much samples (making it a boolean) 
                     if len(target_col_values) == 2 and len(unique_values)!=2:
                         SCEWED_FLAG= True
-                        print(colored('scewed data', 'blue'))
                     #if we dont hace a scewed data -> WE SHOW THE RESULT <SAME AS LINE 173>
                     else: 
-                        print(colored('else scewed data', 'blue'))
-                        # print(TARGET_TYPE)
-                        print(colored(DATA, 'yellow'))
                         gr.Textbox(TARGET_TYPE, label="The target type is:")
-                        # print(CHECK)
 
                         #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                         # global DATAcasted
@@ -196,6 +210,7 @@ with gr.Blocks() as demo:
                         print(colored(DATA_casted, 'yellow'))
 
                             ### Step 3.1: Exploratory Data Analyzis (MANUAL)###
+                        global manualEDA, missing4rows
                         manualEDA, missing4rows = eda.ManualEDAfun(DATA_casted) #data no tiene a predicted column
                         # print(colored('\nTable with information of the variables:', 'red', attrs=['bold']))
                         # print(colored(manualEDA, 'red'))
@@ -204,14 +219,13 @@ with gr.Blocks() as demo:
                         
                             ### Step 2: Data Cleaning ###    
                         #min_porcentage_col if missing>10 for a column, we drop it
+                        global DATA_cleaned
                         DATA_cleaned = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
                         # print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
-                        print(colored(DATA_cleaned, 'red'))
 
                     # print(CHECK) implementar despues
 
                     if SCEWED_FLAG == True:
-                        print(colored('drop scewed question', 'blue'))
                         scewed_yes_no_btn = gr.Radio(["Yes", "No"], label="Cast to boolean (once selected there is no undo):")
                         scewed_yes_no_btn.input(fn=scewed_selection, inputs=scewed_yes_no_btn, outputs=None) #here we cast DATA (when the button is press there is not way back)
                         scewed_yes_no_btn.input(lambda count: count + 1, show_type_RFLAG, show_type_RFLAG, scroll_to_output=True)
@@ -220,32 +234,90 @@ with gr.Blocks() as demo:
             @gr.render(inputs=[show_type_RFLAG])
             def scewed_data_cast(SHOW_TYPE):
                 if SHOW_TYPE>0:
-                    print('user maked a selection')
-                    # print(TARGET_TYPE)
-                    print(colored(DATA, 'blue'))
                     gr.Textbox(TARGET_TYPE, label="The target type is:")
-                    # print(CHECK) implementar despues
                     
                     #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                     # global DATAcasted
-                    DATAcasted = auxiliary_fun.d_cast(DATA, TARGET_COLUMN, TARGET_TYPE)
-                    print(colored(DATAcasted, 'yellow'))
+                    DATA_casted = auxiliary_fun.d_cast(DATA, TARGET_COLUMN, TARGET_TYPE)
 
-        
-        with gr.Tab(label="Square Calculator Tab"):
+                        ### Step 3.1: Exploratory Data Analyzis (MANUAL)###
+                    global manualEDA, missing4rows
+                    manualEDA, missing4rows = eda.ManualEDAfun(DATA_casted) #data no tiene a predicted column
+                    # print(colored('\nTable with information of the variables:', 'red', attrs=['bold']))
+                    # print(colored(manualEDA, 'red'))
+                    # print(colored('\nTable with information of the rows:', 'red', attrs=['bold']))
+                    # print(colored(missing4rows, 'red'))
+                    
+                        ### Step 2: Data Cleaning ###    
+                    #min_porcentage_col if missing>10 for a column, we drop it
+                    global DATA_cleaned
+                    DATA_cleaned = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
+                    # print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
+
+    
+
+        with gr.Tab(label="EDA"):
+
             print(colored('2 tab','red'))
-
             EDA_RFLAG = gr.State(0)
-            number_input = gr.Number(label="Enter a number")
-            calculate_button = gr.Button("Calculate Square")
-            square_output = gr.Label()
+            
+            calculate_button = gr.Button("Start exploratory data analysis (EDA)")
             calculate_button.click(lambda count: count + 1, EDA_RFLAG, EDA_RFLAG, scroll_to_output=True)
-            # gr.Label(DATAcasted)
 
             @gr.render(inputs=[EDA_RFLAG])
             def scewed_data_cast(EDA):
                 if EDA>0:
-                    gr.Label(DATAcasted)
+
+                    gr.Textbox(manualEDA, label="Table with information of the variables:")
+                    # gr.Markdown('Resultado de Data Cleaning:')
+
+                    print(DATA_cleaned.head())
+                    print(manualEDA)
+                    print(missing4rows)
+                    # gr.Label(DATA_cleaned.head())
+
+                    ### Step 3.2: Exploratory Data Analyzis (AUTO)###
+                    dtale.show(DATA_cleaned) #hacerle decast !!!!! 
+                    dtale.show(open_browser=True)
+                    # dtale.show()
+
+        with gr.Tab(label="Dynamic models"):
+
+            MODEL_START_RFLAG = gr.State(0)
+            
+            calculate_button = gr.Button("Start model shake")
+            calculate_button.click(lambda count: count + 1, MODEL_START_RFLAG, MODEL_START_RFLAG, scroll_to_output=True)
+
+            @gr.render(inputs=[MODEL_START_RFLAG])
+            def scewed_data_cast(MODEL_START):
+                if MODEL_START>0:
+
+                        ### Step 5: Model Building       
+                    print(DATA_cleaned)
+                    print(TARGET_COLUMN)
+                    print(TARGET_TYPE)
+                    model_info, IMPORTANCES_OUT, CURRENT_FEATURES_OUT = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE)
+                    print(model_info)
+                    
+                    print(IMPORTANCES_OUT)
+                    gr.Textbox(model_info, label="Table with information of scores of the models:")
+
+                    # input_slider = gr.Slider(2, 20, value=4, label="Count", info="Choose between 2 and 20")
+                    # button_plot = gr.Button("Generate Plot")
+                    # button_plot.click(fn=plot_function, inputs=input_slider, outputs=gr.Image())
+
+                    # importances = IMPORTANCES_OUT[0]
+                    # current_Features = CURRENT_FEATURES_OUT[0]
+
+                    # forest_importances = pd.Series(importances, index=current_Features)
+                    # fig, ax = plt.subplots()
+                    # # forest_importances.plot.bar(yerr=std, ax=ax)
+                    # forest_importances.plot.bar(ax=ax)
+                    # ax.set_title("Feature importances")
+                    # ax.set_ylabel("Mean decrease in impurity")
+                    # fig.tight_layout()
+
+                    # gr.Plot(input=fig ,label="forecast")
 
 # Launch the Gradio interface
 demo.launch()
