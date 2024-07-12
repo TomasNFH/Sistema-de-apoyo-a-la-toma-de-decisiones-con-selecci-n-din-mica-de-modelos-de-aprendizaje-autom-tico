@@ -111,6 +111,41 @@ def plot_function(x):
     return 'plot.png'
 
 
+def plt_feature_importance(x, y):
+    # Create a simple plot
+    # x_vals = np.linspace(0, 10, 100)
+    # y_vals = np.sin(x_vals * float(x))
+
+    importances = x
+    current_Features = y
+
+
+    print('\n\n Feature importances plot')
+    print(x)
+    print(y)
+
+    forest_importances = pd.Series(importances, index=current_Features)
+    fig, ax = plt.subplots()
+    # forest_importances.plot.bar(yerr=std, ax=ax)
+    forest_importances.plot.bar(ax=ax)
+    ax.set_title("Feature importances")
+    ax.set_ylabel("Mean decrease in impurity")
+    fig.tight_layout()
+    
+    # plt.figure()
+    # plt.plot(x_vals, y_vals, label=f'sin({x} * x)')
+    # plt.xlabel('x')
+    # plt.ylabel('sin(x)')
+    # plt.title(f'Sine Wave with Frequency {x}')
+    # plt.legend()
+    
+    # Save the plot to a file
+    fig.savefig('plot.png')
+    fig.close()
+    
+    return 'plot.png'
+
+
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
@@ -283,14 +318,14 @@ with gr.Blocks() as demo:
 
         with gr.Tab(label="Dynamic models"):
 
-            MODEL_START_RFLAG = gr.State(0)
+            MODEL_RESULT_RFLAG = gr.State(0)
             
             calculate_button = gr.Button("Start model shake")
-            calculate_button.click(lambda count: count + 1, MODEL_START_RFLAG, MODEL_START_RFLAG, scroll_to_output=True)
+            calculate_button.click(lambda count: count + 1, MODEL_RESULT_RFLAG, MODEL_RESULT_RFLAG, scroll_to_output=True)
 
-            @gr.render(inputs=[MODEL_START_RFLAG])
-            def scewed_data_cast(MODEL_START):
-                if MODEL_START>0:
+            @gr.render(inputs=[MODEL_RESULT_RFLAG])
+            def scewed_data_cast(MODEL_RESULT):
+                if MODEL_RESULT>0:
 
                         ### Step 5: Model Building       
                     print(DATA_cleaned)
@@ -309,6 +344,14 @@ with gr.Blocks() as demo:
                     # importances = IMPORTANCES_OUT[0]
                     # current_Features = CURRENT_FEATURES_OUT[0]
 
+                    button_plot = gr.Button("Generate Plot")
+                    # button_plot.click(fn=plt_feature_importance, inputs=[importances,current_Features], outputs=gr.Image(), batch=True)
+
+
+
+
+                    #     plt_feature_importance
+
                     # forest_importances = pd.Series(importances, index=current_Features)
                     # fig, ax = plt.subplots()
                     # # forest_importances.plot.bar(yerr=std, ax=ax)
@@ -319,5 +362,18 @@ with gr.Blocks() as demo:
 
                     # gr.Plot(input=fig ,label="forecast")
 
+        with gr.Tab(label="Models predictor"):
+
+            MODEL_START_RFLAG = gr.State(0)
+            
+            calculate_button = gr.Button("Start model slection")
+            calculate_button.click(lambda count: count + 1, MODEL_START_RFLAG, MODEL_START_RFLAG, scroll_to_output=True)
+  
+            @gr.render(inputs=[MODEL_START_RFLAG])
+            def scewed_data_cast(MODEL_START):
+                if MODEL_START>0:
+                    print('dsdsds')
+
 # Launch the Gradio interface
-demo.launch()
+demo.launch(share=True)
+# demo.launch()
