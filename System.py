@@ -36,7 +36,7 @@ def dyn_model_selection(file_selected=-1, column_selected=-1):
     dtale.show(open_browser=True)
 
         ### Step 5: Model Building       
-    model_info = Mbuilding.model_shake(DATA=data, TARGET_COLUMN=target_column, TARGET_TY=target_type)
+    model_info, IMPORTANCES_OUT, CURRENT_FEATURES_OUT = Mbuilding.model_shake(DATA=data, TARGET_COLUMN=target_column, TARGET_TY=target_type)
     sns.lmplot(
         data=model_info, x="Cross-validation ID", y="Score", row="Normalization method", col="Feature selection method", hue='Model name',
         palette="crest", ci=None,

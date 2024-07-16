@@ -48,6 +48,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         IMPORTANCES_OUT.append(importances)
         CURRENT_FEATURES_OUT.append(current_Features)
         # std = np.std([tree.feature_importances_ for tree in forest.estimators_], axis=0)
+        # breakpoint()
         forest_importances = pd.Series(importances, index=current_Features)
         fig, ax = plt.subplots()
         # forest_importances.plot.bar(yerr=std, ax=ax)

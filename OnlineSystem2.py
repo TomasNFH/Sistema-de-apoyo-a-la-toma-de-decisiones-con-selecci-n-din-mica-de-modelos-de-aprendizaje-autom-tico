@@ -8,7 +8,7 @@ from termcolor import colored
 import numpy as np
 import cutie
 import matplotlib.pyplot as plt
-
+import seaborn as sns
 
 import DprepNcleaning
 import eda
@@ -92,58 +92,92 @@ def calculate_square(number):
     return number ** 2
 
 
-def plot_function(x):
-    # Create a simple plot
-    x_vals = np.linspace(0, 10, 100)
-    y_vals = np.sin(x_vals * float(x))
+# def plot_function(x):
+#     # Create a simple plot
+#     x_vals = np.linspace(0, 10, 100)
+#     y_vals = np.sin(x_vals * float(x))
     
-    plt.figure()
-    plt.plot(x_vals, y_vals, label=f'sin({x} * x)')
-    plt.xlabel('x')
-    plt.ylabel('sin(x)')
-    plt.title(f'Sine Wave with Frequency {x}')
-    plt.legend()
+#     plt.figure()
+#     plt.plot(x_vals, y_vals, label=f'sin({x} * x)')
+#     plt.xlabel('x')
+#     plt.ylabel('sin(x)')
+#     plt.title(f'Sine Wave with Frequency {x}')
+#     plt.legend()
     
-    # Save the plot to a file
-    plt.savefig('plot.png')
-    plt.close()
+#     # Save the plot to a file
+#     plt.savefig('plot.png')
+#     plt.close()
     
-    return 'plot.png'
+#     return 'plot.png'
 
 
-def plt_feature_importance(x, y):
+def plt_function(x, y, FLAG):
     # Create a simple plot
     # x_vals = np.linspace(0, 10, 100)
     # y_vals = np.sin(x_vals * float(x))
 
-    importances = x
-    current_Features = y
+
 
 
     print('\n\n Feature importances plot')
     print(x)
+    print(x[0])
+    print(x[1])
     print(y)
+    print(y[0])
+    print(FLAG)
 
-    forest_importances = pd.Series(importances, index=current_Features)
-    fig, ax = plt.subplots()
-    # forest_importances.plot.bar(yerr=std, ax=ax)
-    forest_importances.plot.bar(ax=ax)
-    ax.set_title("Feature importances")
-    ax.set_ylabel("Mean decrease in impurity")
-    fig.tight_layout()
-    
-    # plt.figure()
-    # plt.plot(x_vals, y_vals, label=f'sin({x} * x)')
-    # plt.xlabel('x')
-    # plt.ylabel('sin(x)')
-    # plt.title(f'Sine Wave with Frequency {x}')
-    # plt.legend()
-    
-    # Save the plot to a file
-    fig.savefig('plot.png')
-    fig.close()
-    
-    return 'plot.png'
+
+    if FLAG == 0:
+        print('cero')
+        feature_data = pd.DataFrame([]) 
+        Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
+        for idx in range(len(x)):
+            list_of_tuples = list(zip(y[idx], x[idx]))
+            aux = pd.DataFrame(list_of_tuples, columns=['Feature', 'Score'])
+            aux.insert(0, 'Feature method', Feature_methods[idx]) 
+            feature_data = pd.concat([feature_data,aux],ignore_index=True) 
+
+        fig = plt.figure()
+        figure_idx = 1
+        K = len(feature_data['Feature method'].unique())
+        grouped_by_method = feature_data.groupby('Feature method')
+        for method in feature_data['Feature method'].unique():
+                plt.subplot(K, 1, figure_idx)
+                current_method_data = grouped_by_method.get_group(method)
+                plt.bar(current_method_data['Feature'], current_method_data['Score'], label=method)
+                plt.legend()
+                figure_idx = figure_idx+1
+
+        # ####    
+        # plt.figure()
+
+
+        # ####
+
+        # fig, ax = plt.subplots()
+        # plt.subplot(2, 1, 1)
+        # #firs bar plt
+        # importances = x[0]
+        # current_Features = y[0]
+        # forest_importances = pd.Series(importances, index=current_Features)
+        # print(forest_importances)
+        # # forest_importances.plot.bar(yerr=std, ax=ax)
+        # forest_importances.plot.bar(ax=ax)
+
+        # plt.subplot(2, 1, 2)
+        # importances = x[1]
+        # current_Features = y[1]
+        # forest_importances = pd.Series(importances, index=current_Features)
+        # print(forest_importances)
+        # # forest_importances.plot.bar(yerr=std, ax=ax)
+        # forest_importances.plot.bar(ax=ax, color = 'red')
+
+        # ax.set_title("Feature importances")
+        # ax.set_ylabel("Mean decrease in impurity")
+        # fig.tight_layout()
+
+    return fig
 
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
@@ -153,7 +187,7 @@ def plt_feature_importance(x, y):
 
 
 # Create a Gradio interface
-with gr.Blocks() as demo:
+with gr.Blocks(theme=gr.themes.Soft()) as demo:
     with gr.Tabs():
         print(colored('outside','red'))
         DATAcasted = 'Not uploaded'
@@ -167,7 +201,7 @@ with gr.Blocks() as demo:
             show_type_RFLAG = gr.State(0)
 
             gr.Markdown("## Upload dataset and select target column")
-            data = gr.File(label="Upload CSV / XLSX file", type="filepath") #data id the file uploaded
+            data = gr.File(label="Upload CSV / XLSX file", type="filepath", scale = 5) #data id the file uploaded
 
             @gr.render(inputs=[data])
             def show_split(FILE):
@@ -188,7 +222,8 @@ with gr.Blocks() as demo:
                     if FILE.name[len(FILE.name)-4:] == '.csv':
                         DATA = pd.read_csv(FILE.name)
                     VARIABLES_OF_DATA = DATA.columns #used in target column acq
-                    gr.Textbox(DATA.head(), label="The head of the dataset is:")
+                    # gr.Textbox(DATA.head(), label="The head of the dataset is:", scale=10)
+                    gr.DataFrame(DATA, label="The head of the dataset is:", scale=1)
 
                     target_check_btn = gr.Radio(["Yes", "No"], label="User check of auto detection of target column:")
                     #change CHECK when press
@@ -206,7 +241,7 @@ with gr.Blocks() as demo:
                 if TARGET_CHECK>0:
                     # print('----TARGET_CHECK>0')
                     gr.Markdown("Select a variable to predict ")
-                    column_dropdown = gr.Dropdown(list(VARIABLES_OF_DATA), label="Please select the varaible to predict from the next list: ", filterable=False)
+                    column_dropdown = gr.Dropdown(list(VARIABLES_OF_DATA), label="Please select the varaible to predict from the next list: ", filterable=False, scale = 10)
                     #filterable container
                     # Set the function to be called when the dropdown value changes
                     column_dropdown.change(fn=var_acquisition, inputs=column_dropdown, outputs=None, scroll_to_output=True)
@@ -237,7 +272,7 @@ with gr.Blocks() as demo:
                         SCEWED_FLAG= True
                     #if we dont hace a scewed data -> WE SHOW THE RESULT <SAME AS LINE 173>
                     else: 
-                        gr.Textbox(TARGET_TYPE, label="The target type is:")
+                        gr.Textbox(TARGET_TYPE, label="The target type is:", scale=10)
 
                         #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                         # global DATAcasted
@@ -269,7 +304,7 @@ with gr.Blocks() as demo:
             @gr.render(inputs=[show_type_RFLAG])
             def scewed_data_cast(SHOW_TYPE):
                 if SHOW_TYPE>0:
-                    gr.Textbox(TARGET_TYPE, label="The target type is:")
+                    gr.Textbox(TARGET_TYPE, label="The target type is:", scale=10)
                     
                     #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                     # global DATAcasted
@@ -303,7 +338,7 @@ with gr.Blocks() as demo:
             def scewed_data_cast(EDA):
                 if EDA>0:
 
-                    gr.Textbox(manualEDA, label="Table with information of the variables:")
+                    gr.Textbox(manualEDA, label="Table with information of the variables:", scale=10)
                     # gr.Markdown('Resultado de Data Cleaning:')
 
                     print(DATA_cleaned.head())
@@ -335,17 +370,20 @@ with gr.Blocks() as demo:
                     print(model_info)
                     
                     print(IMPORTANCES_OUT)
-                    gr.Textbox(model_info, label="Table with information of scores of the models:")
+                    # gr.Textbox(model_info, label="Table with information of scores of the models:", scale=10)
+                    gr.DataFrame(model_info, label="Table with information of scores of the models:", scale=1)
 
                     # input_slider = gr.Slider(2, 20, value=4, label="Count", info="Choose between 2 and 20")
                     # button_plot = gr.Button("Generate Plot")
                     # button_plot.click(fn=plot_function, inputs=input_slider, outputs=gr.Image())
 
-                    # importances = IMPORTANCES_OUT[0]
-                    # current_Features = CURRENT_FEATURES_OUT[0]
+                    print(IMPORTANCES_OUT)
+                    importances = gr.State(IMPORTANCES_OUT)
+                    current_Features = gr.State(CURRENT_FEATURES_OUT)
+                    FLAG_PLT = gr.State(0) #Figure 1 <feature importances>
 
                     button_plot = gr.Button("Generate Plot")
-                    # button_plot.click(fn=plt_feature_importance, inputs=[importances,current_Features], outputs=gr.Image(), batch=True)
+                    button_plot.click(fn=plt_function, inputs=[importances,current_Features,FLAG_PLT], outputs=gr.Plot())
 
 
 
@@ -375,5 +413,5 @@ with gr.Blocks() as demo:
                     print('dsdsds')
 
 # Launch the Gradio interface
-demo.launch(share=True)
-# demo.launch()
+# demo.launch(share=True)
+demo.launch()
