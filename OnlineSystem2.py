@@ -92,92 +92,8 @@ def calculate_square(number):
     return number ** 2
 
 
-# def plot_function(x):
-#     # Create a simple plot
-#     x_vals = np.linspace(0, 10, 100)
-#     y_vals = np.sin(x_vals * float(x))
-    
-#     plt.figure()
-#     plt.plot(x_vals, y_vals, label=f'sin({x} * x)')
-#     plt.xlabel('x')
-#     plt.ylabel('sin(x)')
-#     plt.title(f'Sine Wave with Frequency {x}')
-#     plt.legend()
-    
-#     # Save the plot to a file
-#     plt.savefig('plot.png')
-#     plt.close()
-    
-#     return 'plot.png'
-
-
-def plt_function(x, y, FLAG):
-    # Create a simple plot
-    # x_vals = np.linspace(0, 10, 100)
-    # y_vals = np.sin(x_vals * float(x))
-
-
-
-
-    print('\n\n Feature importances plot')
-    print(x)
-    print(x[0])
-    print(x[1])
-    print(y)
-    print(y[0])
-    print(FLAG)
-
-
-    if FLAG == 0:
-        print('cero')
-        feature_data = pd.DataFrame([]) 
-        Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
-        for idx in range(len(x)):
-            list_of_tuples = list(zip(y[idx], x[idx]))
-            aux = pd.DataFrame(list_of_tuples, columns=['Feature', 'Score'])
-            aux.insert(0, 'Feature method', Feature_methods[idx]) 
-            feature_data = pd.concat([feature_data,aux],ignore_index=True) 
-
-        fig = plt.figure()
-        figure_idx = 1
-        K = len(feature_data['Feature method'].unique())
-        grouped_by_method = feature_data.groupby('Feature method')
-        for method in feature_data['Feature method'].unique():
-                plt.subplot(K, 1, figure_idx)
-                current_method_data = grouped_by_method.get_group(method)
-                plt.bar(current_method_data['Feature'], current_method_data['Score'], label=method)
-                plt.legend()
-                figure_idx = figure_idx+1
-
-        # ####    
-        # plt.figure()
-
-
-        # ####
-
-        # fig, ax = plt.subplots()
-        # plt.subplot(2, 1, 1)
-        # #firs bar plt
-        # importances = x[0]
-        # current_Features = y[0]
-        # forest_importances = pd.Series(importances, index=current_Features)
-        # print(forest_importances)
-        # # forest_importances.plot.bar(yerr=std, ax=ax)
-        # forest_importances.plot.bar(ax=ax)
-
-        # plt.subplot(2, 1, 2)
-        # importances = x[1]
-        # current_Features = y[1]
-        # forest_importances = pd.Series(importances, index=current_Features)
-        # print(forest_importances)
-        # # forest_importances.plot.bar(yerr=std, ax=ax)
-        # forest_importances.plot.bar(ax=ax, color = 'red')
-
-        # ax.set_title("Feature importances")
-        # ax.set_ylabel("Mean decrease in impurity")
-        # fig.tight_layout()
-
-    return fig
+def filter_records(records, gender):
+    return records[records["gender"] == gender]
 
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
@@ -291,6 +207,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         #min_porcentage_col if missing>10 for a column, we drop it
                         global DATA_cleaned
                         DATA_cleaned = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
+                        # breakpoint()
                         # print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
 
                     # print(CHECK) implementar despues
@@ -338,7 +255,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             def scewed_data_cast(EDA):
                 if EDA>0:
 
-                    gr.Textbox(manualEDA, label="Table with information of the variables:", scale=10)
+                    gr.DataFrame(manualEDA, label="Table with information of the variables:", scale=10)
                     # gr.Markdown('Resultado de Data Cleaning:')
 
                     print(DATA_cleaned.head())
@@ -366,10 +283,10 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     print(DATA_cleaned)
                     print(TARGET_COLUMN)
                     print(TARGET_TYPE)
-                    model_info, IMPORTANCES_OUT, CURRENT_FEATURES_OUT = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE)
+                    model_info, model_list, figure_features, fig_ROC, disp = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE)
                     print(model_info)
                     
-                    print(IMPORTANCES_OUT)
+                    # print(IMPORTANCES_OUT)
                     # gr.Textbox(model_info, label="Table with information of scores of the models:", scale=10)
                     gr.DataFrame(model_info, label="Table with information of scores of the models:", scale=1)
 
@@ -377,16 +294,26 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     # button_plot = gr.Button("Generate Plot")
                     # button_plot.click(fn=plot_function, inputs=input_slider, outputs=gr.Image())
 
-                    print(IMPORTANCES_OUT)
-                    importances = gr.State(IMPORTANCES_OUT)
-                    current_Features = gr.State(CURRENT_FEATURES_OUT)
-                    FLAG_PLT = gr.State(0) #Figure 1 <feature importances>
+                    # print(IMPORTANCES_OUT)
+                    # importances = gr.State(IMPORTANCES_OUT)
+                    # current_Features = gr.State(CURRENT_FEATURES_OUT)
+                    # FLAG_PLT = gr.State(0) #Figure 1 <feature importances>
 
-                    button_plot = gr.Button("Generate Plot")
-                    button_plot.click(fn=plt_function, inputs=[importances,current_Features,FLAG_PLT], outputs=gr.Plot())
+                    # button_plot = gr.Button("Generate Plot")
+                    # button_plot.click(fn=plt_function, inputs=[importances,current_Features,FLAG_PLT], outputs=gr.Plot())
 
 
 
+                    #  figure_features, fig_ROC, disp
+                    gr.Plot(figure_features)
+                    gr.Plot(disp)
+                    gr.Plot(fig_ROC)
+
+                    return_model = sns.lmplot(data=model_info, x="Cross-validation ID", y="Score", row="Normalization method", col="Feature selection method", hue='Model name',palette="crest", ci=None,height=4, scatter_kws={"s": 50, "alpha": 1}) 
+                    figure_return = return_model.fig  
+                    gr.Plot(figure_return)
+                    
+                    
 
                     #     plt_feature_importance
 
@@ -411,7 +338,32 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             def scewed_data_cast(MODEL_START):
                 if MODEL_START>0:
                     print('dsdsds')
+                    breakpoint()
+                    print(VARIABLES_OF_DATA)
+                    # gr.Dataframe(
+                    #     headers=list(VARIABLES_OF_DATA),
+                    #     # datatype=["str", "number", "str"],
+                    #     row_count=1,
+                    #     col_count=(len(VARIABLES_OF_DATA), "fixed"),
+                    #     interactive=True
+                    # )
+                    gr.Interface(
+                        filter_records,
+                        [
+                            gr.Dropdown(["M", "F", "O"]),
+                            gr.Dataframe(
+                                headers=["name", "age", "gender"],
+                                datatype=["str", "number", "str"],
+                                row_count=5,
+                                col_count=(3, "fixed"),
+                            )
+                            # gr.Dropdown(["M", "F", "O"]),
+                        ],
+                        "dataframe",
+                        description="Enter gender as 'M', 'F', or 'O' for other.",
+                    )
 
+                    
 # Launch the Gradio interface
 # demo.launch(share=True)
 demo.launch()

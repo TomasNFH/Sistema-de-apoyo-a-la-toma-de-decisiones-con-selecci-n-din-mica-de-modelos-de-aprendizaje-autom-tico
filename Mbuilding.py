@@ -36,6 +36,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
     ### Step 1: Feature Engeeniring ###
     IMPORTANCES_OUT = []
     CURRENT_FEATURES_OUT = []
+    ALL_TRAINED_MODELS = []
     for F_FLAG in FEATURE_FLAGS:
         # breakpoint()
         X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
@@ -49,13 +50,13 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         CURRENT_FEATURES_OUT.append(current_Features)
         # std = np.std([tree.feature_importances_ for tree in forest.estimators_], axis=0)
         # breakpoint()
-        forest_importances = pd.Series(importances, index=current_Features)
-        fig, ax = plt.subplots()
-        # forest_importances.plot.bar(yerr=std, ax=ax)
-        forest_importances.plot.bar(ax=ax)
-        ax.set_title("Feature importances")
-        ax.set_ylabel("Mean decrease in impurity")
-        fig.tight_layout()
+        # forest_importances = pd.Series(importances, index=current_Features)
+        # fig, ax = plt.subplots()
+        # # forest_importances.plot.bar(yerr=std, ax=ax)
+        # forest_importances.plot.bar(ax=ax)
+        # ax.set_title("Feature importances")
+        # ax.set_ylabel("Mean decrease in impurity")
+        # fig.tight_layout()
 
         #BOOTSTRAPPING
         min_number_of_samples = 50
@@ -100,6 +101,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
                     model = auxiliary_fun.model_dashboard(model_name)
 
                     model.fit(X_train, y_train)
+                    ALL_TRAINED_MODELS.append(model)
                     prediction = model.predict(X_test)
                     # breakpoint()
 
@@ -154,6 +156,31 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
                                                                  number_of_splits, shift_idx, CoMtx, 
                                                                  tpr, fpr, Recall, F1, auc, model.score(X_test, y_test)] 
     #show results
+    # IMPORTANCES_OUT = []
+    # CURRENT_FEATURES_OUT = []
+
+    feature_data = pd.DataFrame([]) 
+    Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
+    for idx in range(len(IMPORTANCES_OUT)):
+        list_of_tuples = list(zip(CURRENT_FEATURES_OUT[idx], IMPORTANCES_OUT[idx]))
+        aux = pd.DataFrame(list_of_tuples, columns=['Feature', 'Score'])
+        aux.insert(0, 'Feature method', Feature_methods[idx]) 
+        feature_data = pd.concat([feature_data,aux],ignore_index=True) 
+
+    figure_features = plt.figure()
+    figure_idx = 1
+    K = len(feature_data['Feature method'].unique())
+    grouped_by_method = feature_data.groupby('Feature method')
+    for method in feature_data['Feature method'].unique():
+            plt.subplot(K, 1, figure_idx)
+            current_method_data = grouped_by_method.get_group(method)
+            plt.bar(current_method_data['Feature'], current_method_data['Score'], label=method)
+            plt.legend()
+            figure_idx = figure_idx+1
+
+
+
+
     if TARGET_TY == 'boolean':
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
         print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'True Positive Rate', 'False Positive Rate', 'Recall', 'F1 score', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
@@ -163,28 +190,28 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         best_model_res = model_return.iloc[MAX_idx]
         # print(colored('\nConfusion matrix:', 'green', attrs=['bold']))
         # print(colored(pd.DataFrame(best_model_res['Confusion matrix'], columns=classes_of_target, index=classes_of_target), 'green'))
+        
         disp = ConfusionMatrixDisplay(confusion_matrix = best_model_res['Confusion matrix'], display_labels=list(classes_of_target))    
         disp.plot() 
         plt.title('Confusion matrix')
         plt.show()
+        figure_CM = disp.figure_
+
         # print(colored('\nThe Features used with this model where', 'green', attrs=['bold']))
         # print(colored(list(best_model_res['Features used']), 'green'))
         
 
-
-
-
-
         #AGREGAR ACA LAS GRAFICAS ROCCCCC
         number_of_models = len(model_return['Model name'].unique())
         grouped_by_model = model_return.groupby('Model name')
-        plt.figure()
+        fig_ROC = plt.figure()
         model_idx = 0
         # print(sns.color_palette("mako").as_hex())   
         for model_name_loop in model_return['Model name'].unique():
             print(model_idx)
             current_model_data = grouped_by_model.get_group(model_name_loop)
             for index, row in current_model_data.iterrows():
+                # fig_matrix = plt.figure()
                 plt.subplot(1,4,model_idx+1)
                 plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row['AUC']:.2f})')
                 plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
@@ -221,6 +248,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
         print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
 
-    return model_return, IMPORTANCES_OUT, CURRENT_FEATURES_OUT
+    return model_return, ALL_TRAINED_MODELS, figure_features, fig_ROC, figure_CM
 
 
