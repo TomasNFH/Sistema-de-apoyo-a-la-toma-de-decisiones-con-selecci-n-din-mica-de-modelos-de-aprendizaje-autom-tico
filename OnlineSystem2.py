@@ -92,8 +92,13 @@ def calculate_square(number):
     return number ** 2
 
 
-def filter_records(records, gender):
-    return records[records["gender"] == gender]
+def filter_records(data_input):
+    # index = model_selection_list.index(model) 
+    # index_model = idx_model_sl_lst[index]
+    # current_model = model_list[index_model] 
+
+    breakpoint()
+    return 0
 
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
@@ -103,7 +108,7 @@ def filter_records(records, gender):
 
 
 # Create a Gradio interface
-with gr.Blocks(theme=gr.themes.Soft()) as demo:
+with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_size='sm')) as demo:
     with gr.Tabs():
         print(colored('outside','red'))
         DATAcasted = 'Not uploaded'
@@ -116,7 +121,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             target_check_RFLAG = gr.State(0) #need to be global?
             show_type_RFLAG = gr.State(0)
 
-            gr.Markdown("## Upload dataset and select target column")
+            # gr.Markdown("## Upload dataset and select target column")
             data = gr.File(label="Upload CSV / XLSX file", type="filepath", scale = 5) #data id the file uploaded
 
             @gr.render(inputs=[data])
@@ -139,7 +144,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         DATA = pd.read_csv(FILE.name)
                     VARIABLES_OF_DATA = DATA.columns #used in target column acq
                     # gr.Textbox(DATA.head(), label="The head of the dataset is:", scale=10)
-                    gr.DataFrame(DATA, label="The head of the dataset is:", scale=1)
+                    gr.DataFrame(DATA.head(2), label="The head of the dataset is:", scale=1)
 
                     target_check_btn = gr.Radio(["Yes", "No"], label="User check of auto detection of target column:")
                     #change CHECK when press
@@ -156,7 +161,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                 #enters when we select if we want the user verification of the target type
                 if TARGET_CHECK>0:
                     # print('----TARGET_CHECK>0')
-                    gr.Markdown("Select a variable to predict ")
+                    # gr.Markdown("Select a variable to predict ")
                     column_dropdown = gr.Dropdown(list(VARIABLES_OF_DATA), label="Please select the varaible to predict from the next list: ", filterable=False, scale = 10)
                     #filterable container
                     # Set the function to be called when the dropdown value changes
@@ -283,26 +288,12 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     print(DATA_cleaned)
                     print(TARGET_COLUMN)
                     print(TARGET_TYPE)
+                    global model_list
+                    global model_info
                     model_info, model_list, figure_features, fig_ROC, disp = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE)
                     print(model_info)
                     
-                    # print(IMPORTANCES_OUT)
-                    # gr.Textbox(model_info, label="Table with information of scores of the models:", scale=10)
                     gr.DataFrame(model_info, label="Table with information of scores of the models:", scale=1)
-
-                    # input_slider = gr.Slider(2, 20, value=4, label="Count", info="Choose between 2 and 20")
-                    # button_plot = gr.Button("Generate Plot")
-                    # button_plot.click(fn=plot_function, inputs=input_slider, outputs=gr.Image())
-
-                    # print(IMPORTANCES_OUT)
-                    # importances = gr.State(IMPORTANCES_OUT)
-                    # current_Features = gr.State(CURRENT_FEATURES_OUT)
-                    # FLAG_PLT = gr.State(0) #Figure 1 <feature importances>
-
-                    # button_plot = gr.Button("Generate Plot")
-                    # button_plot.click(fn=plt_function, inputs=[importances,current_Features,FLAG_PLT], outputs=gr.Plot())
-
-
 
                     #  figure_features, fig_ROC, disp
                     gr.Plot(figure_features)
@@ -313,49 +304,66 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                     figure_return = return_model.fig  
                     gr.Plot(figure_return)
                     
-                    
-
-                    #     plt_feature_importance
-
-                    # forest_importances = pd.Series(importances, index=current_Features)
-                    # fig, ax = plt.subplots()
-                    # # forest_importances.plot.bar(yerr=std, ax=ax)
-                    # forest_importances.plot.bar(ax=ax)
-                    # ax.set_title("Feature importances")
-                    # ax.set_ylabel("Mean decrease in impurity")
-                    # fig.tight_layout()
-
-                    # gr.Plot(input=fig ,label="forecast")
 
         with gr.Tab(label="Models predictor"):
 
             MODEL_START_RFLAG = gr.State(0)
+            dropdown_Mpredictor_RFLAG = gr.State(0)
             
-            calculate_button = gr.Button("Start model slection")
+            calculate_button = gr.Button("Start model selection")
             calculate_button.click(lambda count: count + 1, MODEL_START_RFLAG, MODEL_START_RFLAG, scroll_to_output=True)
   
             @gr.render(inputs=[MODEL_START_RFLAG])
             def scewed_data_cast(MODEL_START):
                 if MODEL_START>0:
-                    print('dsdsds')
-                    breakpoint()
-                    print(VARIABLES_OF_DATA)
-                    # gr.Dataframe(
-                    #     headers=list(VARIABLES_OF_DATA),
-                    #     # datatype=["str", "number", "str"],
-                    #     row_count=1,
-                    #     col_count=(len(VARIABLES_OF_DATA), "fixed"),
-                    #     interactive=True
-                    # )
+                    # print('dsdsds')
+                    # breakpoint()
+                    # print(model_list)
+                    # gr.DataFrame(DATA_cleaned.head(3), label="Example of inputs:", scale=1)
+
+                    top10_by_AUC = model_info.sort_values(by=['AUC'], ascending=False)[0:10][['Model name','F1 score','AUC','Score']]
+                    global model_selection_list
+                    global idx_model_sl_lst
+                    model_selection_list = []
+                    idx_model_sl_lst = []
+                    for row in top10_by_AUC.iterrows():
+                        # breakpoint()
+                        aux = str(row[1]['Model name'])+': <F1 score: '+str(round(row[1]['F1 score'],3))+', AUC:' 
+                        aux2 = aux + str(round(row[1]['AUC'],3)) + ', Score:'+str(round(row[1]['Score'],3))+'>'
+                        model_selection_list.append(aux2)
+                        idx_model_sl_lst.append(row[0])
+
+                    
+
+
+                    column_dropdown = gr.Dropdown(choices=model_selection_list)
+                    #filterable container
+                    # Set the function to be called when the dropdown value changes
+                    # column_dropdown.change(fn=var_acquisition, inputs=column_dropdown, outputs=None, scroll_to_output=True)
+                    column_dropdown.input(lambda count: count + 1, dropdown_Mpredictor_RFLAG, dropdown_Mpredictor_RFLAG, scroll_to_output=True)
+
+
+            @gr.render(inputs=[dropdown_Mpredictor_RFLAG])
+            def scewed_data_cast(dropdown_Mpredictor):
+
+                if dropdown_Mpredictor>1:
+
+                    print('Entra')
+
+                    index_model = idx_model_sl_lst[dropdown_Mpredictor] 
+                    # breakpoint()
+
+                    gr.DataFrame(DATA_cleaned[model_info['Features used'].loc[index_model]].head(3), label="Example of inputs:", scale=1)
+
                     gr.Interface(
                         filter_records,
                         [
-                            gr.Dropdown(["M", "F", "O"]),
                             gr.Dataframe(
-                                headers=["name", "age", "gender"],
-                                datatype=["str", "number", "str"],
-                                row_count=5,
-                                col_count=(3, "fixed"),
+                                headers=list(model_info['Features used'].loc[index_model]),
+                                # datatype=["str", "number", "str"],
+                                row_count=1,
+                                col_count=(len(model_info['Features used'].loc[index_model]), "fixed"),
+                                interactive=True
                             )
                             # gr.Dropdown(["M", "F", "O"]),
                         ],
