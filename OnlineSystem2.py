@@ -97,8 +97,10 @@ def filter_records(data_input):
     # index_model = idx_model_sl_lst[index]
     # current_model = model_list[index_model] 
 
-    breakpoint()
-    return 0
+    data_input = data_input.to_numpy()  
+    predicted_val = selected_model.predict(data_input.reshape(1,-1))
+    # breakpoint()
+    return predicted_val[0]
 
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
@@ -296,13 +298,15 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                     gr.DataFrame(model_info, label="Table with information of scores of the models:", scale=1)
 
                     #  figure_features, fig_ROC, disp
-                    gr.Plot(figure_features)
-                    gr.Plot(disp)
-                    gr.Plot(fig_ROC)
+                    with gr.Row():
+                        gr.Plot(figure_features)
+                        gr.Plot(disp)
 
                     return_model = sns.lmplot(data=model_info, x="Cross-validation ID", y="Score", row="Normalization method", col="Feature selection method", hue='Model name',palette="crest", ci=None,height=4, scatter_kws={"s": 50, "alpha": 1}) 
                     figure_return = return_model.fig  
-                    gr.Plot(figure_return)
+                    with gr.Row():
+                        gr.Plot(fig_ROC)
+                        gr.Plot(figure_return)
                     
 
         with gr.Tab(label="Models predictor"):
@@ -320,23 +324,21 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                     # breakpoint()
                     # print(model_list)
                     # gr.DataFrame(DATA_cleaned.head(3), label="Example of inputs:", scale=1)
-
-                    top10_by_AUC = model_info.sort_values(by=['AUC'], ascending=False)[0:10][['Model name','F1 score','AUC','Score']]
+                    # breakpoint()
+                    top10_by_AUC = model_info.sort_values(by=['AUC','Score','F1 score'], ascending=False)[0:10][['Model name','AUC','Score','F1 score']]
                     global model_selection_list
                     global idx_model_sl_lst
                     model_selection_list = []
                     idx_model_sl_lst = []
                     for row in top10_by_AUC.iterrows():
                         # breakpoint()
-                        aux = str(row[1]['Model name'])+': <F1 score: '+str(round(row[1]['F1 score'],3))+', AUC:' 
-                        aux2 = aux + str(round(row[1]['AUC'],3)) + ', Score:'+str(round(row[1]['Score'],3))+'>'
+                        aux = str(row[1]['Model name'])+': <AUC: '+str(round(row[1]['AUC'],3))+', Score:' 
+                        aux2 = aux + str(round(row[1]['Score'],3)) + ', F1 score:'+str(round(row[1]['F1 score'],3))+'>'
                         model_selection_list.append(aux2)
                         idx_model_sl_lst.append(row[0])
 
-                    
 
-
-                    column_dropdown = gr.Dropdown(choices=model_selection_list)
+                    column_dropdown = gr.Dropdown(choices=model_selection_list, filterable=False)
                     #filterable container
                     # Set the function to be called when the dropdown value changes
                     # column_dropdown.change(fn=var_acquisition, inputs=column_dropdown, outputs=None, scroll_to_output=True)
@@ -351,24 +353,40 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                     print('Entra')
 
                     index_model = idx_model_sl_lst[dropdown_Mpredictor] 
+                    global selected_model
+                    selected_model = model_list[dropdown_Mpredictor] 
+
+                    # breakpoint()
+                    training_example = DATA_cleaned[model_info['Features used'].loc[index_model]].reset_index()
+                    training_example = training_example.drop("index", axis='columns')
+                    prediction_example = selected_model.predict(training_example.to_numpy())
+                    prediction_example = pd.DataFrame(prediction_example, columns=['Prediction'])
+                    # max_show_rows = 4
+                    indexes_unique = []
+                    for unique_prediction in prediction_example['Prediction'].unique():
+                        print(unique_prediction)
+                        aux_indexes = prediction_example[prediction_example['Prediction']==unique_prediction].index
+                        # breakpoint()
+                        indexes_unique.append(aux_indexes[0])
                     # breakpoint()
 
-                    gr.DataFrame(DATA_cleaned[model_info['Features used'].loc[index_model]].head(3), label="Example of inputs:", scale=1)
+                    with gr.Row():
+                        # speed = gr.Slider(1, 30, 25, label="Speed")
+                        # angle = gr.Slider(0, 90, 45, label="Angle")
+                        gr.DataFrame(training_example.loc[indexes_unique] , label="Example of inputs:", scale=5)
+                        gr.DataFrame(prediction_example.loc[indexes_unique] , label="Prediction:", scale=1)
 
                     gr.Interface(
-                        filter_records,
-                        [
-                            gr.Dataframe(
+                        fn=filter_records,
+                        inputs=[gr.Dataframe(
                                 headers=list(model_info['Features used'].loc[index_model]),
                                 # datatype=["str", "number", "str"],
                                 row_count=1,
                                 col_count=(len(model_info['Features used'].loc[index_model]), "fixed"),
                                 interactive=True
-                            )
-                            # gr.Dropdown(["M", "F", "O"]),
-                        ],
-                        "dataframe",
-                        description="Enter gender as 'M', 'F', or 'O' for other.",
+                                )],
+                        outputs="textbox",
+                        description="Enter input to predict: ",
                     )
 
                     
