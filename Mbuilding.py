@@ -204,25 +204,36 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         #AGREGAR ACA LAS GRAFICAS ROCCCCC
         number_of_models = len(model_return['Model name'].unique())
         grouped_by_model = model_return.groupby('Model name')
+
         fig_ROC = plt.figure()
         model_idx = 0
-        # print(sns.color_palette("mako").as_hex())   
+        max_curves_per_model = 1
+        
+        # print(sns.color_palette("mako").as_hex())  
+        # breakpoint() 
+        print(colored('ROC','blue'))
         for model_name_loop in model_return['Model name'].unique():
-            print(model_idx)
+            print(model_name_loop)
+            curve_id = 0
             current_model_data = grouped_by_model.get_group(model_name_loop)
+            current_model_data = current_model_data.sort_values(by=['AUC','Score','F1 score'], ascending=False)
             for index, row in current_model_data.iterrows():
-                # fig_matrix = plt.figure()
-                plt.subplot(1,4,model_idx+1)
-                plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row['AUC']:.2f})')
-                plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-                plt.xlim([0.0, 1.0])
-                plt.ylim([0.0, 1.05])
-                plt.xlabel('False Positive Rate')
-                plt.ylabel('True Positive Rate')
-                plt.title(f'{row['Model name']} - Receiver Operating Characteristic')
-                plt.legend(loc="lower right")
+                if curve_id < max_curves_per_model:
+                    print(curve_id)
+                    print('lower than')
+                    plt.subplot(1,4,model_idx+1)
+                    plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row['AUC']:.2f})')
+                    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+                    plt.xlim([0.0, 1.0])
+                    plt.ylim([0.0, 1.05])
+                    plt.xlabel('False Positive R.')
+                    if model_idx == 0:
+                        plt.ylabel('True Positive Rate')
+                    plt.title(f'{row['Model name']}', rotation=10)
+                    plt.legend(loc="lower right")
+                curve_id = curve_id+1
             model_idx = model_idx+1
-                
+        # breakpoint()
 
         # graph = sns.lmplot(model_return, x= "False Positive Rate", y="True Positive Rate", hue='AUC', col="Model name", palette="crest", ci=None,height=4, scatter_kws={"s": 100, "alpha": 1})
         # # graph = sns.lmplot(model_return, x= "100-Specifity", y="Sensitivity", hue='Model name', col="Model name", palette="crest", ci=None,height=4, scatter_kws={"s": 100, "alpha": 1})

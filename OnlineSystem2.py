@@ -89,7 +89,13 @@ def greet(name):
 
 # Define a function for the second tab
 def calculate_square(number):
-    return number ** 2
+    # breakpoint()
+    print('new imput')
+    print(number)
+    print('esa era number')
+    global current_model_selected
+    current_model_selected = number
+    return 0
 
 
 def filter_records(data_input):
@@ -300,12 +306,12 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                     #  figure_features, fig_ROC, disp
                     with gr.Row():
                         gr.Plot(figure_features)
+                        gr.Plot(fig_ROC)
                         gr.Plot(disp)
 
                     return_model = sns.lmplot(data=model_info, x="Cross-validation ID", y="Score", row="Normalization method", col="Feature selection method", hue='Model name',palette="crest", ci=None,height=4, scatter_kws={"s": 50, "alpha": 1}) 
                     figure_return = return_model.fig  
                     with gr.Row():
-                        gr.Plot(fig_ROC)
                         gr.Plot(figure_return)
                     
 
@@ -341,7 +347,7 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                     column_dropdown = gr.Dropdown(choices=model_selection_list, filterable=False)
                     #filterable container
                     # Set the function to be called when the dropdown value changes
-                    # column_dropdown.change(fn=var_acquisition, inputs=column_dropdown, outputs=None, scroll_to_output=True)
+                    column_dropdown.input(fn=calculate_square, inputs=column_dropdown, outputs=None, scroll_to_output=True)
                     column_dropdown.input(lambda count: count + 1, dropdown_Mpredictor_RFLAG, dropdown_Mpredictor_RFLAG, scroll_to_output=True)
 
 
@@ -351,8 +357,9 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                 if dropdown_Mpredictor>1:
 
                     print('Entra')
-
-                    index_model = idx_model_sl_lst[dropdown_Mpredictor] 
+                    # breakpoint()
+                    current_model_selected_idx = model_selection_list.index(current_model_selected)
+                    index_model = idx_model_sl_lst[current_model_selected_idx] 
                     global selected_model
                     selected_model = model_list[dropdown_Mpredictor] 
 
@@ -361,6 +368,8 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                     training_example = training_example.drop("index", axis='columns')
                     prediction_example = selected_model.predict(training_example.to_numpy())
                     prediction_example = pd.DataFrame(prediction_example, columns=['Prediction'])
+                    print(training_example.head())
+                    print(prediction_example.head())
                     # max_show_rows = 4
                     indexes_unique = []
                     for unique_prediction in prediction_example['Prediction'].unique():
@@ -369,6 +378,8 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                         # breakpoint()
                         indexes_unique.append(aux_indexes[0])
                     # breakpoint()
+                    print('indexes_unique')
+                    print(indexes_unique)
 
                     with gr.Row():
                         # speed = gr.Slider(1, 30, 25, label="Speed")
