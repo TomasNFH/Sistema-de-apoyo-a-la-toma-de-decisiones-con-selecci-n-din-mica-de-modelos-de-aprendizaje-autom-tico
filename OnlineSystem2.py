@@ -9,26 +9,25 @@ import numpy as np
 import cutie
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 import DprepNcleaning
 import eda
 import Mbuilding
 import dtale
+
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
 
 def var_acquisition(column_name):
-
     global DATA
     global CHECK #sacar de aca
     global TARGET_TYPE
     global drop_target_col_values #needed for the scewed cast
     global TARGET_COLUMN #needed for data drop in scewed data
     TARGET_TYPE = 'Not identify'
-    # LEN_SCEWED_2 = False
     TARGET_COLUMN = column_name
+
     #check if the user already selected something
     if len(TARGET_COLUMN) != 0: #check if the
         
@@ -48,6 +47,7 @@ def var_acquisition(column_name):
         len_target_col = len(DATA[TARGET_COLUMN]) 
         R = len(unique_values)/len_target_col #coeficient of number of unique in relation to number of rows
         number_of_classes = 10
+
         #if we have to many classes in relation of samples, ask to group the classes 
         #sceewed check is added becouse we dont want to over write what we done
         if R>(number_of_classes/100):    
@@ -56,74 +56,127 @@ def var_acquisition(column_name):
         if R<=(number_of_classes/100): 
             if len(unique_values)!=2: #dont enter if we already classify as boolean
                 TARGET_TYPE = 'classes'    
-
     return f"You have selected the column: {TARGET_TYPE}"
 
 def check_selection(selection):
-
     global CHECK
     CHECK = selection
 
     return CHECK
 
 def scewed_selection(selection):
-
     global DATA
     global TARGET_TYPE
     global TARGET_COLUMN
     global drop_target_col_values
     if selection == "Yes":
-        print('dropeooooo si siiiii funcion')
         TARGET_TYPE = 'boolean'
         for drop_val in drop_target_col_values:
             drop_row = DATA[TARGET_COLUMN][DATA[TARGET_COLUMN]==drop_val].index
             DATA = DATA.drop(drop_row)
-
     return CHECK
 
-
-
-# Define a function for the first tab
-def greet(name):
-    return f"Hello, {name}!"
-
-# Define a function for the second tab
 def calculate_square(number):
-    # breakpoint()
-    print('new imput')
-    print(number)
-    print('esa era number')
     global current_model_selected
     current_model_selected = number
     return 0
 
-
 def filter_records(data_input):
-    # index = model_selection_list.index(model) 
-    # index_model = idx_model_sl_lst[index]
-    # current_model = model_list[index_model] 
-
     data_input = data_input.to_numpy()  
     predicted_val = selected_model.predict(data_input.reshape(1,-1))
-    # breakpoint()
     return predicted_val[0]
 
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
+css = """
+.custom-button {
+    background-color: #4CAF50; /* Green background */
+    color: white;              /* White text */
+    border: none;              /* No border */
+    padding: 15px 32px;        /* Some padding */
+    text-align: center;        /* Centered text */
+    text-decoration: none;     /* No underline */
+    display: inline-block;     /* Inline-block */
+    font-size: 16px;           /* Large font size */
+    margin: 4px 2px;           /* Some margin */
+    cursor: pointer;           /* Pointer/hand icon */
+    border-radius: 8px;        /* Rounded corners */
+}
+"""
+class Tomas_Color:
+    all = []
 
+    def __init__(
+        self,
+        c50: str,
+        c100: str,
+        c200: str,
+        c300: str,
+        c400: str,
+        c500: str,
+        c600: str,
+        c700: str,
+        c800: str,
+        c900: str,
+        c950: str,
+        name: str | None = None,
+    ):
+        self.c50 = c50
+        self.c100 = c100
+        self.c200 = c200
+        self.c300 = c300
+        self.c400 = c400
+        self.c500 = c500
+        self.c600 = c600
+        self.c700 = c700
+        self.c800 = c800
+        self.c900 = c900
+        self.c950 = c950
+        self.name = name
+        Tomas_Color.all.append(self)
 
-
+    def expand(self) -> list[str]:
+        return [
+            self.c50,
+            self.c100,
+            self.c200,
+            self.c300,
+            self.c400,
+            self.c500,
+            self.c600,
+            self.c700,
+            self.c800,
+            self.c900,
+            self.c950,
+        ]  
+ing_bio_green = Tomas_Color(
+    name="ing_bio_green",
+    c50="#C0E3DD",
+    c100="#C0E3DD",
+    c200="#258289",
+    c300="#258289",
+    c400="#258289",
+    c500="#258289",
+    c600="#258289",
+    c700="#258289",
+    c800="#258289",
+    c900="#09B474",
+    c950="#258289",
+)
+    
+# print(gr.themes.colors.orange)
+# with gr.Blocks(theme=CustomTheme()) as demo:
 # Create a Gradio interface
-with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_size='sm')) as demo:
+with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary_hue="red",neutral_hue= 'gray',text_size='sm', spacing_size='sm', radius_size='sm')) as demo:
+# with gr.Blocks(theme=theme2) as demo:
     with gr.Tabs():
-        print(colored('outside','red'))
         DATAcasted = 'Not uploaded'
-        with gr.Tab(label="Data acquisition and cleaning"):
 
-            print(colored('1 tab','red'))
-            # print('\nInitialize -> gr.BLOCK \n')
+##########################    ##########################    ##########################    ##########################    ##########################    ##########################
+
+        with gr.Tab(label="Data acquisition and cleaning"):
             # define FLAGS for render order
             column_dropdown_RFLAG = gr.State(0)
             target_check_RFLAG = gr.State(0) #need to be global?
@@ -131,17 +184,15 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
 
             # gr.Markdown("## Upload dataset and select target column")
             data = gr.File(label="Upload CSV / XLSX file", type="filepath", scale = 5) #data id the file uploaded
+            # greet_button = gr.Button("Greet", elem_classes=["custom-button"])
 
+            # render:
+            #           <data head> DATAFRAME
+            #           <User check of auto detection of target column:> CHECK
             @gr.render(inputs=[data])
             def show_split(FILE):
-                
-                # global DATA_cleaned 
-                # DATA_cleaned = 1
-                # print('1 - Entered to render of auto detection check <DATA>')
                 #enter if a file is loaded (define DATA and its columns Variables_OF_DATA)
                 if FILE != None: 
-
-                    # print('----FILE != None')
                     global DATA
                     global VARIABLES_OF_DATA
                     global target_check_RFLAG 
@@ -151,40 +202,30 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                     if FILE.name[len(FILE.name)-4:] == '.csv':
                         DATA = pd.read_csv(FILE.name)
                     VARIABLES_OF_DATA = DATA.columns #used in target column acq
-                    # gr.Textbox(DATA.head(), label="The head of the dataset is:", scale=10)
-                    gr.DataFrame(DATA.head(2), label="The head of the dataset is:", scale=1)
 
-                    target_check_btn = gr.Radio(["Yes", "No"], label="User check of auto detection of target column:")
+                    with gr.Row():
+                        gr.DataFrame(DATA.head(5), label="The head of the dataset is:", scale=10)
+                        target_check_btn = gr.Radio(["Yes", "No"], label="User check of auto detection of target column:", scale=1)
                     #change CHECK when press
                     target_check_btn.input(fn=check_selection, inputs=target_check_btn, outputs=None)
                     #change target_check_RFLAG <for dissable of the button funcionality>
                     target_check_btn.input(lambda count: count + 1, target_check_RFLAG, target_check_RFLAG, scroll_to_output=True)
 
-
-
+            #render: <Please select the varaible to predict from the next list:> DROPDOWN
             @gr.render(inputs=[target_check_RFLAG])
             def show_split(TARGET_CHECK):
-
-                # print('2 - Entered to render of target selection <TARGET CHECK>')
                 #enters when we select if we want the user verification of the target type
                 if TARGET_CHECK>0:
-                    # print('----TARGET_CHECK>0')
-                    # gr.Markdown("Select a variable to predict ")
                     column_dropdown = gr.Dropdown(list(VARIABLES_OF_DATA), label="Please select the varaible to predict from the next list: ", filterable=False, scale = 10)
-                    #filterable container
                     # Set the function to be called when the dropdown value changes
                     column_dropdown.change(fn=var_acquisition, inputs=column_dropdown, outputs=None, scroll_to_output=True)
                     column_dropdown.input(lambda count: count + 1, column_dropdown_RFLAG, column_dropdown_RFLAG, scroll_to_output=True)
                     
+            #render: <The target type is:> 
             @gr.render(inputs=[column_dropdown_RFLAG])
             def scewed_data_cast(column_dropdown):
-
                 SCEWED_FLAG = False
-                # print('4 - Enter to render of type detection <CLUMN DROPDOWN>')
-                if column_dropdown>1:
-                    # print(colored('---column_dropdown activate', 'red'))
-                    
-
+                if column_dropdown>1:                
                     global drop_target_col_values #for scewed function
 
                     ### 3.1 verify scewed predict data (to cast to boolean)
@@ -201,7 +242,8 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                         SCEWED_FLAG= True
                     #if we dont hace a scewed data -> WE SHOW THE RESULT <SAME AS LINE 173>
                     else: 
-                        gr.Textbox(TARGET_TYPE, label="The target type is:", scale=10)
+                        # gr.Textbox(TARGET_TYPE, label="The target type is:", scale=10)
+                        gr.Label(TARGET_TYPE, show_label=False, color='#238288')
 
                         #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                         # global DATAcasted
@@ -253,8 +295,8 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                     global DATA_cleaned
                     DATA_cleaned = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
                     # print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
-
     
+##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
         with gr.Tab(label="EDA"):
 
@@ -280,6 +322,8 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                     dtale.show(DATA_cleaned) #hacerle decast !!!!! 
                     dtale.show(open_browser=True)
                     # dtale.show()
+
+##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
         with gr.Tab(label="Dynamic models"):
 
@@ -314,6 +358,7 @@ with gr.Blocks(theme=gr.themes.Soft(text_size='sm', spacing_size='sm', radius_si
                     with gr.Row():
                         gr.Plot(figure_return)
                     
+##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
         with gr.Tab(label="Models predictor"):
 
