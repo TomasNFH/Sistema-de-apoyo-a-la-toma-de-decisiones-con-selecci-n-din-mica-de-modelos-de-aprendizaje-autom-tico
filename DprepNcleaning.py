@@ -29,7 +29,7 @@ def data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0):
     data = data.drop(drop_col, axis=1)
     data = data.drop(drop_row)
 
-    return data
+    return data, drop_col, drop_row
 
 def data_normF(data, FLAG=1):
     

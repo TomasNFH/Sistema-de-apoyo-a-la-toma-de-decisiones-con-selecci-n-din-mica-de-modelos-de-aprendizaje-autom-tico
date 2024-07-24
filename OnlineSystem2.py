@@ -155,22 +155,19 @@ ing_bio_green = Tomas_Color(
     name="ing_bio_green",
     c50="#C0E3DD",
     c100="#C0E3DD",
-    c200="#258289",
-    c300="#258289",
-    c400="#258289",
-    c500="#258289",
-    c600="#258289",
-    c700="#258289",
-    c800="#258289",
+    c200="#309284",
+    c300="#309284",
+    c400="#309284",
+    c500="#309284",
+    c600="#309284",
+    c700="#19575C",
+    c800="#309284",
     c900="#09B474",
-    c950="#258289",
+    c950="#309284",
 )
     
-# print(gr.themes.colors.orange)
-# with gr.Blocks(theme=CustomTheme()) as demo:
-# Create a Gradio interface
-with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary_hue="red",neutral_hue= 'gray',text_size='sm', spacing_size='sm', radius_size='sm')) as demo:
-# with gr.Blocks(theme=theme2) as demo:
+
+with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary_hue="blue",neutral_hue= 'gray',text_size='sm', spacing_size='sm', radius_size='sm')) as demo:
     with gr.Tabs():
         DATAcasted = 'Not uploaded'
 
@@ -203,8 +200,10 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         DATA = pd.read_csv(FILE.name)
                     VARIABLES_OF_DATA = DATA.columns #used in target column acq
 
+                    gr.Markdown("## The head of the dataset is: ")
                     with gr.Row():
-                        gr.DataFrame(DATA.head(5), label="The head of the dataset is:", scale=10)
+                        gr.DataFrame(DATA.head(5), scale=10)
+                        # gr.DataFrame(DATA.head(5), label="The head of the dataset is:", scale=10)
                         target_check_btn = gr.Radio(["Yes", "No"], label="User check of auto detection of target column:", scale=1)
                     #change CHECK when press
                     target_check_btn.input(fn=check_selection, inputs=target_check_btn, outputs=None)
@@ -243,7 +242,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     #if we dont hace a scewed data -> WE SHOW THE RESULT <SAME AS LINE 173>
                     else: 
                         # gr.Textbox(TARGET_TYPE, label="The target type is:", scale=10)
-                        gr.Label(TARGET_TYPE, show_label=False, color='#238288')
+                        gr.Label(TARGET_TYPE, show_label=False)
 
                         #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                         # global DATAcasted
@@ -261,7 +260,9 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                             ### Step 2: Data Cleaning ###    
                         #min_porcentage_col if missing>10 for a column, we drop it
                         global DATA_cleaned
-                        DATA_cleaned = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
+                        global DROP_COL
+                        global DROP_ROW
+                        DATA_cleaned, DROP_COL, DROP_ROW = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
                         # breakpoint()
                         # print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
 
@@ -293,7 +294,9 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         ### Step 2: Data Cleaning ###    
                     #min_porcentage_col if missing>10 for a column, we drop it
                     global DATA_cleaned
-                    DATA_cleaned = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
+                    global DROP_COL
+                    global DROP_ROW
+                    DATA_cleaned, DROP_COL, DROP_ROW = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
                     # print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
     
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
@@ -309,8 +312,25 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
             @gr.render(inputs=[EDA_RFLAG])
             def scewed_data_cast(EDA):
                 if EDA>0:
-
-                    gr.DataFrame(manualEDA, label="Table with information of the variables:", scale=10)
+                    gr.Markdown('## Resultado de Data Cleaning:')
+                    gr.Markdown('Cantidad de columnas eliminadas: '+
+                                str(len(DROP_COL))+
+                                ' of '+
+                                str(len(DATA_cleaned.columns))+
+                                ' ('+
+                                str( round(len(DROP_COL)/len(DATA_cleaned.columns)*100, 2) )+
+                                '%)')
+                    gr.Markdown('Cantidad de filas eliminadas: '+
+                                str(len(DROP_ROW))+
+                                ' of '+
+                                str(len(DATA_cleaned))+
+                                ' ('+
+                                str( round(len(DROP_ROW)/len(DATA_cleaned)*100, 2) )+
+                                '%)')
+                    gr.Markdown('The result of the number of patients is: '+str(len(DATA_cleaned)))
+                    gr.Markdown("## Table with information of the variables: ")
+                    gr.DataFrame(manualEDA)
+                        
                     # gr.Markdown('Resultado de Data Cleaning:')
 
                     print(DATA_cleaned.head())
@@ -319,8 +339,8 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     # gr.Label(DATA_cleaned.head())
 
                     ### Step 3.2: Exploratory Data Analyzis (AUTO)###
-                    dtale.show(DATA_cleaned) #hacerle decast !!!!! 
-                    dtale.show(open_browser=True)
+                    # dtale.show(DATA_cleaned) #hacerle decast !!!!! 
+                    # dtale.show(open_browser=True)
                     # dtale.show()
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
