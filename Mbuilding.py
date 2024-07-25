@@ -12,6 +12,9 @@ from sklearn.utils import resample
 
 
 def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
+
+    fig_ROC = 0
+    fig_CM = 0
   
     model_return = pd.DataFrame(columns = ['Target column', 'Taget type', 'Model name', 
                                            'Normalization method', 'Feature selection method', 
@@ -103,6 +106,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
                             Specifity = TN/np.sum(TN_FP)
                             Specifity = (1-Specifity)*100
                             F1 = 2*(accurecy*Recall)/((accurecy+Recall))
+                            # breakpoint()
                             metrics_result = auxiliary_fun.computemetrics(model, X_test, y_test)
                             tpr = metrics_result['roc_curve'][1]
                             fpr = metrics_result['roc_curve'][0]
@@ -142,7 +146,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         disp.plot() 
         plt.title('Confusion matrix')
         plt.show()
-        figure_CM = disp.figure_
+        fig_CM = disp.figure_
 
         number_of_models = len(model_return['Model name'].unique())
         grouped_by_model = model_return.groupby('Model name')
@@ -185,6 +189,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
         print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
 
-    return model_return, ALL_TRAINED_MODELS, figure_features, fig_ROC, figure_CM
+    return model_return, ALL_TRAINED_MODELS, figure_features, fig_ROC, fig_CM
 
 

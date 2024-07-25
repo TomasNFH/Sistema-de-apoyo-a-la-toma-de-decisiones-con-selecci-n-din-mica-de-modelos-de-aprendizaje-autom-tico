@@ -28,7 +28,7 @@ def dyn_model_selection(file_selected=-1, column_selected=-1):
     
         ### Step 2: Data Cleaning ###    
     #min_porcentage_col if missing>10 for a column, we drop it
-    data = DprepNcleaning.data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0)
+    data, drop_col, drop_row = DprepNcleaning.data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0)
     print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
 
         ### Step 3.2: Exploratory Data Analyzis (AUTO)###
@@ -38,7 +38,6 @@ def dyn_model_selection(file_selected=-1, column_selected=-1):
         ### Step 5: Model Building       
     model_info, trained_models, fig1, fig2, fig3 = Mbuilding.model_shake(DATA=data, TARGET_COLUMN=target_column, TARGET_TY=target_type)
     # model_return, ALL_TRAINED_MODELS, figure_features, fig_ROC, figure_CM
-    breakpoint()
     sns.lmplot(
         data=model_info, x="Cross-validation ID", y="Score", row="Normalization method", col="Feature selection method", hue='Model name',
         palette="crest", ci=None,

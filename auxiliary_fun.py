@@ -48,7 +48,7 @@ def model_dashboard(model_name, N_classes=2):
     if model_name=='LinearRegression':
         model = linear_model.LinearRegression()
     if model_name=='LogisticRegression':
-        model = linear_model.LogisticRegression() 
+        model = linear_model.LogisticRegression(max_iter=1000) 
     if model_name=='KNeighborsClassifier':
         model = KNeighborsClassifier()
     if model_name=='SupportVectorMachines':
@@ -83,7 +83,9 @@ def computemetrics(model, X_test, y_test):
 
     y_pred = model.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
-    report = classification_report(y_test, y_pred, output_dict=True)
+    #report fow each unique class (+ avg)
+    report = classification_report(y_test, y_pred, output_dict=True, zero_division=0) 
+    # breakpoint()
     cm = confusion_matrix(y_test, y_pred)
 
     #Compute ROC curve and AUC

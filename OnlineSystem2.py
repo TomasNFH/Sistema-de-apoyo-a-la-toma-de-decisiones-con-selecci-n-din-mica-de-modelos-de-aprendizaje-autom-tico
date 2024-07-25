@@ -174,6 +174,12 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
         with gr.Tab(label="Data acquisition and cleaning"):
+
+            # big_block = gr.HTML("""
+            # <div style='height: 800px; width: 100px; background-color: pink;'></div>
+            # """)
+            # text_input = 'test '+str(10)
+            # bigs_block = gr.HTML("<input type='text' value=text_input readonly>")
             # define FLAGS for render order
             column_dropdown_RFLAG = gr.State(0)
             target_check_RFLAG = gr.State(0) #need to be global?
@@ -202,7 +208,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
 
                     gr.Markdown("## The head of the dataset is: ")
                     with gr.Row():
-                        gr.DataFrame(DATA.head(5), scale=10)
+                        gr.DataFrame(DATA.head(5), scale=10, interactive='False')
                         # gr.DataFrame(DATA.head(5), label="The head of the dataset is:", scale=10)
                         target_check_btn = gr.Radio(["Yes", "No"], label="User check of auto detection of target column:", scale=1)
                     #change CHECK when press
@@ -329,7 +335,12 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                                 '%)')
                     gr.Markdown('The result of the number of patients is: '+str(len(DATA_cleaned)))
                     gr.Markdown("## Table with information of the variables: ")
-                    gr.DataFrame(manualEDA)
+                    gr.DataFrame(manualEDA, interactive='False')
+                    gr.Markdown("## Table with information of the rows: ")
+                    gr.DataFrame(missing4rows, interactive='False')
+
+
+                    
                         
                     # gr.Markdown('Resultado de Data Cleaning:')
 
@@ -365,18 +376,20 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     model_info, model_list, figure_features, fig_ROC, disp = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE)
                     print(model_info)
                     
-                    gr.DataFrame(model_info, label="Table with information of scores of the models:", scale=1)
+                    gr.DataFrame(model_info, label="Table with information of scores of the models:", scale=1, interactive='False')
 
                     #  figure_features, fig_ROC, disp
+                    breakpoint()
                     with gr.Row():
-                        gr.Plot(figure_features)
-                        gr.Plot(fig_ROC)
-                        gr.Plot(disp)
+                        gr.Plot(figure_features, show_label=False)
+                        if TARGET_TYPE == 'boolean':
+                            gr.Plot(fig_ROC, show_label=False)
+                            gr.Plot(disp, show_label=False)
 
                     return_model = sns.lmplot(data=model_info, x="Cross-validation ID", y="Score", row="Normalization method", col="Feature selection method", hue='Model name',palette="crest", ci=None,height=4, scatter_kws={"s": 50, "alpha": 1}) 
                     figure_return = return_model.fig  
                     with gr.Row():
-                        gr.Plot(figure_return)
+                        gr.Plot(figure_return, show_label=False)
                     
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
@@ -447,10 +460,8 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     print(indexes_unique)
 
                     with gr.Row():
-                        # speed = gr.Slider(1, 30, 25, label="Speed")
-                        # angle = gr.Slider(0, 90, 45, label="Angle")
-                        gr.DataFrame(training_example.loc[indexes_unique] , label="Example of inputs:", scale=5)
-                        gr.DataFrame(prediction_example.loc[indexes_unique] , label="Prediction:", scale=1)
+                        gr.DataFrame(training_example.loc[indexes_unique].head(5) , label="Example of inputs:", scale=5, interactive='False')
+                        gr.DataFrame(prediction_example.loc[indexes_unique].head(5) , label="Prediction:", scale=1, interactive='False')
 
                     gr.Interface(
                         fn=filter_records,
