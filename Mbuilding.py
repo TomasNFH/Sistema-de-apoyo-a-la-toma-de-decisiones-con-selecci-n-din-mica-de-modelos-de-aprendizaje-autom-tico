@@ -123,16 +123,63 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         aux.insert(0, 'Feature method', Feature_methods[idx]) 
         feature_data = pd.concat([feature_data,aux],ignore_index=True) 
 
-    figure_features = plt.figure()
-    figure_idx = 1
-    K = len(feature_data['Feature method'].unique())
-    grouped_by_method = feature_data.groupby('Feature method')
-    for method in feature_data['Feature method'].unique():
-            plt.subplot(K, 1, figure_idx)
-            current_method_data = grouped_by_method.get_group(method)
-            plt.bar(current_method_data['Feature'], current_method_data['Score'], label=method)
-            plt.legend()
-            figure_idx = figure_idx+1
+
+    # figure_features1 = plt.figure()
+    # fontsize = 10
+    # t = np.arange(0.0, FEATURE_N, 1)
+    # colors = sns.color_palette("flare").as_hex()
+
+    # # breakpoint()
+    # ax = figure_features1.add_subplot(111)
+    # line1 = plt.bar(t-0.1, feature_data[feature_data['Feature method']==Feature_methods[0]]['Score'] , width = 0.4, label=Feature_methods[0], color = colors[0])
+    # # plt.bar(t-0.1, feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'] , width = 0.4, label=Feature_methods[1], color = colors[2])
+    # # plt.ylim(0,1)
+    # plt.legend(loc='upper right')
+    # plt.xticks(range(0, len(t)))
+    # ax.tick_params(axis='both', which='major', labelsize=fontsize)
+    # ax.set_xticklabels(feature_data[feature_data['Feature method']==Feature_methods[0]]['Feature'], rotation = 45)
+    # # figure_features.savefig('good_score_L.png', dpi=600, format='png', bbox_inches='tight')
+    # plt.tight_layout()
+
+    # figure_features2 = plt.figure()
+    # fontsize = 10
+    # t = np.arange(0.0, FEATURE_N, 1)
+    # colors = sns.color_palette("flare").as_hex()
+
+    # # breakpoint()
+    # ax = figure_features2.add_subplot(111)
+    # line2 = plt.bar(t-0.1, feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'] , width = 0.4, label=Feature_methods[0], color = colors[0])
+    # # plt.bar(t-0.1, feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'] , width = 0.4, label=Feature_methods[1], color = colors[2])
+    # # plt.ylim(0,1)
+    # plt.legend(loc='upper right')
+    # plt.xticks(range(0, len(t)))
+    # ax.tick_params(axis='both', which='major', labelsize=fontsize)
+    # ax.set_xticklabels(feature_data[feature_data['Feature method']==Feature_methods[1]]['Feature'], rotation = 45)
+    # # figure_features.savefig('good_score_L.png', dpi=600, format='png', bbox_inches='tight')
+    # plt.tight_layout()
+
+
+
+    # breakpoint()
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+
+    ax1.bar(feature_data[feature_data['Feature method']==Feature_methods[1]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'])
+    ax1.set_ylim(0, 1)
+    # plt.tight_layout()
+
+    ax2.bar(feature_data[feature_data['Feature method']==Feature_methods[1]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'])
+    ax2.set_ylim(0, 1)
+    # plt.tight_layout()
+    # ax2.tight_layout()
+    plt.draw()
+    # plt.tight_layout()
+    # fig.tight_layout()
+
+    ax1.set_xticklabels(ax1.get_xticklabels(), rotation=30, ha='right')
+    ax2.set_xticklabels(ax2.get_xticklabels(), rotation=30, ha='right')
+    plt.tight_layout()
+    fig.tight_layout()   
+    # breakpoint()
 
     if TARGET_TY == 'boolean':
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
@@ -155,6 +202,8 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         model_idx = 0
         max_curves_per_model = 1
         print(colored('ROC','blue'))
+        print(colored(len(model_return['Model name'].unique()) ,'blue'))
+        # breakpoint()
         for model_name_loop in model_return['Model name'].unique():
             print(model_name_loop)
             curve_id = 0
@@ -164,7 +213,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
                 if curve_id < max_curves_per_model:
                     print(curve_id)
                     print('lower than')
-                    plt.subplot(1,4,model_idx+1)
+                    plt.subplot(2,2,model_idx+1)
                     plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row['AUC']:.2f})')
                     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
                     plt.xlim([0.0, 1.0])
@@ -172,10 +221,11 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
                     plt.xlabel('False Positive R.')
                     if model_idx == 0:
                         plt.ylabel('True Positive Rate')
-                    plt.title(f'{row['Model name']}', rotation=10)
+                    plt.title(f'{row['Model name']}', rotation=0)
                     plt.legend(loc="lower right")
                 curve_id = curve_id+1
             model_idx = model_idx+1
+        plt.tight_layout()
 
     if TARGET_TY == 'classes':
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
@@ -189,6 +239,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
         print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
 
-    return model_return, ALL_TRAINED_MODELS, figure_features, fig_ROC, fig_CM
+    return model_return, ALL_TRAINED_MODELS, fig, fig_ROC, fig_CM
 
 

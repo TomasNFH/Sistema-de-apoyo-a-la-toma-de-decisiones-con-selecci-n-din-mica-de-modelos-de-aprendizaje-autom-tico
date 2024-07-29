@@ -203,9 +203,9 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     if FILE.name[len(FILE.name)-5:] == '.xlsx':
                         DATA = pd.read_excel(FILE.name)
                     if FILE.name[len(FILE.name)-4:] == '.csv':
-                        DATA = pd.read_csv(FILE.name, delimiter=';')
-                        DATA =  DATA.loc[0:100]
-                        # breakpoint()
+                        DATA = pd.read_csv(FILE.name)
+                        # DATA = pd.read_csv(FILE.name, delimiter=';')
+                        # DATA =  DATA.loc[0:100]
                     VARIABLES_OF_DATA = DATA.columns #used in target column acq
 
                     gr.Markdown("## The head of the dataset is: ")
@@ -414,10 +414,19 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     #  figure_features, fig_ROC, disp
                     # breakpoint()
                     with gr.Row():
-                        gr.Plot(figure_features, show_label=False)
+                        gr.Plot(figure_features, show_label=False, scale = 1)
                         if TARGET_TYPE == 'boolean':
+                            # with gr.Column():
                             gr.Plot(fig_ROC, show_label=False)
-                            gr.Plot(disp, show_label=False)
+                            with gr.Row():
+                                gr.Plot(disp, show_label=False)
+                                with gr.Column():
+                                    gr.Plot(disp, show_label=False)
+                                    
+                                with gr.Column():
+                                    gr.Plot(disp, show_label=False)
+                                    gr.Plot(disp, show_label=False)
+
 
                     return_model = sns.lmplot(data=model_info, x="Cross-validation ID", y="Score", row="Normalization method", col="Feature selection method", hue='Model name',palette="crest", ci=None,height=4, scatter_kws={"s": 50, "alpha": 1}) 
                     figure_return = return_model.fig  
