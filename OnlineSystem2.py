@@ -203,7 +203,9 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     if FILE.name[len(FILE.name)-5:] == '.xlsx':
                         DATA = pd.read_excel(FILE.name)
                     if FILE.name[len(FILE.name)-4:] == '.csv':
-                        DATA = pd.read_csv(FILE.name)
+                        DATA = pd.read_csv(FILE.name, delimiter=';')
+                        DATA =  DATA.loc[0:100]
+                        # breakpoint()
                     VARIABLES_OF_DATA = DATA.columns #used in target column acq
 
                     gr.Markdown("## The head of the dataset is: ")
@@ -248,7 +250,35 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     #if we dont hace a scewed data -> WE SHOW THE RESULT <SAME AS LINE 173>
                     else: 
                         # gr.Textbox(TARGET_TYPE, label="The target type is:", scale=10)
-                        gr.Label(TARGET_TYPE, show_label=False)
+
+
+                        if TARGET_TYPE != 'Not identify': #take it depending if is boolean or classes
+                            if TARGET_TYPE == 'continuous': #print depending of target typr
+                                text_output_1 = '\nThe target column type is '
+                                text_output_2 = ', the elements are:'
+                            else: #discrete case
+                                # print(colored('\nThe target column type is ', 'black', attrs=['bold']), end='')
+                                text_output_1 = '\nThe target column type is ' + 'discrete ('                                 
+                                text_output_2 = ')'+', the classes are:'
+                            # if TARGET_TYPE == 'boolean': print(colored(DATA[TARGET_COLUMN].unique(), 'green', attrs=['bold']))
+                            text_output_3 = '\n'
+                            for unique_element in DATA[TARGET_COLUMN].unique(): 
+                                print(colored(str(unique_element)+' ', 'green', attrs=['bold']), end='')
+                                text_output_3 = text_output_3+str(unique_element)+' - '
+
+
+                        with gr.Column():
+                            # breakpoint()
+                            # gr.Label(TARGET_TYPE, show_label=False)
+                            gr.Label(text_output_1+TARGET_TYPE.upper()+text_output_2, show_label=False)
+                            gr.Label(text_output_3[:len(text_output_3)-3] , show_label=False)
+                            
+
+
+
+
+
+
 
                         #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                         # global DATAcasted
@@ -318,6 +348,12 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
             @gr.render(inputs=[EDA_RFLAG])
             def scewed_data_cast(EDA):
                 if EDA>0:
+
+                    gr.Markdown("## Table with information of the variables: ")
+                    gr.DataFrame(manualEDA, interactive='False')
+                    gr.Markdown("## Table with information of the rows: ")
+                    gr.DataFrame(missing4rows, interactive='False')
+
                     gr.Markdown('## Resultado de Data Cleaning:')
                     gr.Markdown('Cantidad de columnas eliminadas: '+
                                 str(len(DROP_COL))+
@@ -334,10 +370,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                                 str( round(len(DROP_ROW)/len(DATA_cleaned)*100, 2) )+
                                 '%)')
                     gr.Markdown('The result of the number of patients is: '+str(len(DATA_cleaned)))
-                    gr.Markdown("## Table with information of the variables: ")
-                    gr.DataFrame(manualEDA, interactive='False')
-                    gr.Markdown("## Table with information of the rows: ")
-                    gr.DataFrame(missing4rows, interactive='False')
+
 
 
                     
@@ -379,7 +412,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     gr.DataFrame(model_info, label="Table with information of scores of the models:", scale=1, interactive='False')
 
                     #  figure_features, fig_ROC, disp
-                    breakpoint()
+                    # breakpoint()
                     with gr.Row():
                         gr.Plot(figure_features, show_label=False)
                         if TARGET_TYPE == 'boolean':

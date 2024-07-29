@@ -25,7 +25,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
     FEATURE_FLAGS = np.array([0,1,2]) #dont use 2 due to time
     if Fast:
         FEATURE_FLAGS = np.array([0,1])
-    FEATURE_N = 5 #can test to change it or make it auto to find the best N
+    FEATURE_N = 10 #can test to change it or make it auto to find the best N
     if TARGET_TY == 'boolean':
         model_stack = ['RandomForestClassifier', 'LogisticRegression', 'KNeighborsClassifier', 'SupportVectorMachines']
         NORM_FLAGS = np.array([0])
