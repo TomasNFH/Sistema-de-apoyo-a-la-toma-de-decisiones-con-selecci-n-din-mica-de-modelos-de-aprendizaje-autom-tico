@@ -287,7 +287,9 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
 
                             ### Step 3.1: Exploratory Data Analyzis (MANUAL)###
                         global manualEDA, missing4rows
+                        # breakpoint()
                         manualEDA, missing4rows = eda.ManualEDAfun(DATA_casted) #data no tiene a predicted column
+                        # breakpoint()
                         # print(colored('\nTable with information of the variables:', 'red', attrs=['bold']))
                         # print(colored(manualEDA, 'red'))
                         # print(colored('\nTable with information of the rows:', 'red', attrs=['bold']))
@@ -348,7 +350,8 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
             @gr.render(inputs=[EDA_RFLAG])
             def scewed_data_cast(EDA):
                 if EDA>0:
-
+                    gr.Markdown("## Table with descriptive statistics of variables: ")
+                    gr.DataFrame(DATA_cleaned.describe(), interactive='False')
                     gr.Markdown("## Table with information of the variables: ")
                     gr.DataFrame(manualEDA, interactive='False')
                     gr.Markdown("## Table with information of the rows: ")
@@ -362,13 +365,13 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                                 ' ('+
                                 str( round(len(DROP_COL)/len(DATA_cleaned.columns)*100, 2) )+
                                 '%)')
-                    gr.Markdown('Cantidad de filas eliminadas: '+
-                                str(len(DROP_ROW))+
-                                ' of '+
-                                str(len(DATA_cleaned))+
-                                ' ('+
-                                str( round(len(DROP_ROW)/len(DATA_cleaned)*100, 2) )+
-                                '%)')
+                    # gr.Markdown('Cantidad de filas eliminadas: '+
+                    #             str(len(DROP_ROW))+
+                    #             ' of '+
+                    #             str(len(DATA_cleaned))+
+                    #             ' ('+
+                    #             str( round(len(DROP_ROW)/len(DATA_cleaned)*100, 2) )+
+                    #             '%)')
                     gr.Markdown('The result of the number of patients is: '+str(len(DATA_cleaned)))
 
 
@@ -376,16 +379,16 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     
                         
                     # gr.Markdown('Resultado de Data Cleaning:')
-
+                    # breakpoint()
                     print(DATA_cleaned.head())
                     print(manualEDA)
                     print(missing4rows)
                     # gr.Label(DATA_cleaned.head())
 
                     ### Step 3.2: Exploratory Data Analyzis (AUTO)###
-                    # dtale.show(DATA_cleaned) #hacerle decast !!!!! 
-                    # dtale.show(open_browser=True)
-                    # dtale.show()
+                    dtale.show(DATA_cleaned) #hacerle decast !!!!! 
+                    dtale.show(open_browser=True)
+                    dtale.show()
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
@@ -418,14 +421,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         if TARGET_TYPE == 'boolean':
                             # with gr.Column():
                             gr.Plot(fig_ROC, show_label=False)
-                            with gr.Row():
-                                gr.Plot(disp, show_label=False)
-                                with gr.Column():
-                                    gr.Plot(disp, show_label=False)
-                                    
-                                with gr.Column():
-                                    gr.Plot(disp, show_label=False)
-                                    gr.Plot(disp, show_label=False)
+                            gr.Plot(disp, show_label=False)a
 
 
                     return_model = sns.lmplot(data=model_info, x="Cross-validation ID", y="Score", row="Normalization method", col="Feature selection method", hue='Model name',palette="crest", ci=None,height=4, scatter_kws={"s": 50, "alpha": 1}) 
@@ -512,7 +508,8 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                                 # datatype=["str", "number", "str"],
                                 row_count=1,
                                 col_count=(len(model_info['Features used'].loc[index_model]), "fixed"),
-                                interactive=True
+                                interactive=True,
+                                scale = 5
                                 )],
                         outputs="textbox",
                         description="Enter input to predict: ",

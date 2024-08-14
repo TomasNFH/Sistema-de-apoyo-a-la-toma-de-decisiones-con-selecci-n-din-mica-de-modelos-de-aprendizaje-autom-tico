@@ -23,7 +23,8 @@ def ManualEDAfun(data):
         if zeros_col!=0:
             Pmz_col = (zeros_col/N_row)*100
         manualEDA.loc[len(manualEDA.index)] = [current_col, unique_col, Puniq_col, NaN_count_col, Pmiss_col, zeros_col, Pz_col] 
-    #missing values by row
+    # missing values by row
+    # breakpoint()
     for row in data.iterrows():
         NaN_count_row = row[1].isna().sum()
         missing4rows.loc[len(missing4rows.index)] = [row[0], NaN_count_row, (NaN_count_row/N_col)*100] 

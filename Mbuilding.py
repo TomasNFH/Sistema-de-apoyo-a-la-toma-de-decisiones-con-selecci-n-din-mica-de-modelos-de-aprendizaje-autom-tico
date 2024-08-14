@@ -12,7 +12,7 @@ from sklearn.utils import resample
 
 
 def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
-
+    colors_plot = ['#309284', '#337AEF']
     fig_ROC = 0
     fig_CM = 0
   
@@ -163,11 +163,11 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
     # breakpoint()
     fig, (ax1, ax2) = plt.subplots(2, 1)
 
-    ax1.bar(feature_data[feature_data['Feature method']==Feature_methods[1]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'])
+    ax1.bar(feature_data[feature_data['Feature method']==Feature_methods[1]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'], color=colors_plot[0])
     ax1.set_ylim(0, 1)
     # plt.tight_layout()
 
-    ax2.bar(feature_data[feature_data['Feature method']==Feature_methods[1]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'])
+    ax2.bar(feature_data[feature_data['Feature method']==Feature_methods[1]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'], color = colors_plot[0])
     ax2.set_ylim(0, 1)
     # plt.tight_layout()
     # ax2.tight_layout()
@@ -189,11 +189,38 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         MAX_idx = model_return['Score'].idxmax()
         best_model_res = model_return.iloc[MAX_idx]
 
-        disp = ConfusionMatrixDisplay(confusion_matrix = best_model_res['Confusion matrix'], display_labels=list(classes_of_target))    
-        disp.plot() 
-        plt.title('Confusion matrix')
-        plt.show()
-        fig_CM = disp.figure_
+        model_idx = 0
+        fig_CM, axes = plt.subplots(1, 4, sharey='row')
+        max_curves_per_model = 1
+        number_of_models = len(model_return['Model name'].unique())
+        grouped_by_model = model_return.groupby('Model name')
+        for model_name_loop in model_return['Model name'].unique():
+            print(model_name_loop)
+            curve_id = 0
+            current_model_data = grouped_by_model.get_group(model_name_loop)
+            current_model_data = current_model_data.sort_values(by=['AUC','Score','F1 score'], ascending=False)
+            for index, row in current_model_data.iterrows():
+                if curve_id < max_curves_per_model:
+                    print(curve_id)
+                    print('lower than')
+                    # breakpoint()
+
+                    disp = ConfusionMatrixDisplay(row['Confusion matrix'],
+                                                display_labels=list(classes_of_target))
+                    disp.plot(ax=axes[model_idx], xticks_rotation=45)
+                    disp.ax_.set_title(model_name_loop, rotation = 15)
+                    disp.im_.colorbar.remove()
+                    disp.ax_.set_xlabel('')
+
+
+                curve_id = curve_id+1
+            model_idx = model_idx+1
+        plt.tight_layout()
+        # disp = ConfusionMatrixDisplay(confusion_matrix = best_model_res['Confusion matrix'], display_labels=list(classes_of_target))    
+        # disp.plot() 
+        # plt.title('Confusion matrix')
+        # plt.show()
+        # fig_CM = disp.figure_
 
         number_of_models = len(model_return['Model name'].unique())
         grouped_by_model = model_return.groupby('Model name')
@@ -214,8 +241,8 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
                     print(curve_id)
                     print('lower than')
                     plt.subplot(2,2,model_idx+1)
-                    plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row['AUC']:.2f})')
-                    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+                    plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row['AUC']:.2f})', color=colors_plot[0])
+                    plt.plot([0, 1], [0, 1], color=colors_plot[1], lw=2, linestyle='--')
                     plt.xlim([0.0, 1.0])
                     plt.ylim([0.0, 1.05])
                     plt.xlabel('False Positive R.')
