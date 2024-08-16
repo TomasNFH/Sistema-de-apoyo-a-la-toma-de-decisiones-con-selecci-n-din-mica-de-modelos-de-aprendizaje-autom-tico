@@ -74,7 +74,7 @@ def scewed_selection(selection):
         for drop_val in drop_target_col_values:
             drop_row = DATA[TARGET_COLUMN][DATA[TARGET_COLUMN]==drop_val].index
             DATA = DATA.drop(drop_row)
-    return CHECK
+    return 0
 
 def calculate_square(number):
     global current_model_selected
@@ -175,19 +175,12 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
 
         with gr.Tab(label="Data acquisition and cleaning"):
 
-            # big_block = gr.HTML("""
-            # <div style='height: 800px; width: 100px; background-color: pink;'></div>
-            # """)
-            # text_input = 'test '+str(10)
-            # bigs_block = gr.HTML("<input type='text' value=text_input readonly>")
             # define FLAGS for render order
             column_dropdown_RFLAG = gr.State(0)
-            target_check_RFLAG = gr.State(0) #need to be global?
+            # target_check_RFLAG = gr.State(0) #need to be global?
             show_type_RFLAG = gr.State(0)
 
-            # gr.Markdown("## Upload dataset and select target column")
             data = gr.File(label="Upload CSV / XLSX file", type="filepath", scale = 5) #data id the file uploaded
-            # greet_button = gr.Button("Greet", elem_classes=["custom-button"])
 
             # render:
             #           <data head> DATAFRAME
@@ -199,7 +192,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     global DATA
                     global VARIABLES_OF_DATA
                     global target_check_RFLAG 
-                    global target_check_btn
+                    # global target_check_btn
                     if FILE.name[len(FILE.name)-5:] == '.xlsx':
                         DATA = pd.read_excel(FILE.name)
                     if FILE.name[len(FILE.name)-4:] == '.csv':
@@ -209,24 +202,26 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     VARIABLES_OF_DATA = DATA.columns #used in target column acq
 
                     gr.Markdown("## The head of the dataset is: ")
-                    with gr.Row():
-                        gr.DataFrame(DATA.head(5), scale=10, interactive='False')
-                        # gr.DataFrame(DATA.head(5), label="The head of the dataset is:", scale=10)
-                        target_check_btn = gr.Radio(["Yes", "No"], label="User check of auto detection of target column:", scale=1)
-                    #change CHECK when press
-                    target_check_btn.input(fn=check_selection, inputs=target_check_btn, outputs=None)
-                    #change target_check_RFLAG <for dissable of the button funcionality>
-                    target_check_btn.input(lambda count: count + 1, target_check_RFLAG, target_check_RFLAG, scroll_to_output=True)
+                    gr.DataFrame(DATA.head(5), interactive='False')
 
-            #render: <Please select the varaible to predict from the next list:> DROPDOWN
-            @gr.render(inputs=[target_check_RFLAG])
-            def show_split(TARGET_CHECK):
-                #enters when we select if we want the user verification of the target type
-                if TARGET_CHECK>0:
-                    column_dropdown = gr.Dropdown(list(VARIABLES_OF_DATA), label="Please select the varaible to predict from the next list: ", filterable=False, scale = 10)
-                    # Set the function to be called when the dropdown value changes
+                    # target_check_btn = gr.Radio(["Yes", "No"], label="User check of auto detection of target column:", scale=10)
+                    # #change CHECK when press
+                    # target_check_btn.input(fn=check_selection, inputs=target_check_btn, outputs=None)
+                    # #change target_check_RFLAG <for dissable of the button funcionality>
+                    # target_check_btn.input(lambda count: count + 1, target_check_RFLAG, target_check_RFLAG, scroll_to_output=True)
+                    column_dropdown = gr.Dropdown(list(VARIABLES_OF_DATA), label="Please select the varaible to predict from the next list: ", filterable=False)
                     column_dropdown.change(fn=var_acquisition, inputs=column_dropdown, outputs=None, scroll_to_output=True)
                     column_dropdown.input(lambda count: count + 1, column_dropdown_RFLAG, column_dropdown_RFLAG, scroll_to_output=True)
+
+            # #render: <Please select the varaible to predict from the next list:> DROPDOWN
+            # @gr.render(inputs=[target_check_RFLAG])
+            # def show_split(TARGET_CHECK):
+            #     #enters when we select if we want the user verification of the target type
+            #     if TARGET_CHECK>0:
+            #         column_dropdown = gr.Dropdown(list(VARIABLES_OF_DATA), label="Please select the varaible to predict from the next list: ", filterable=False, scale = 10)
+            #         # Set the function to be called when the dropdown value changes
+            #         column_dropdown.change(fn=var_acquisition, inputs=column_dropdown, outputs=None, scroll_to_output=True)
+            #         column_dropdown.input(lambda count: count + 1, column_dropdown_RFLAG, column_dropdown_RFLAG, scroll_to_output=True)
                     
             #render: <The target type is:> 
             @gr.render(inputs=[column_dropdown_RFLAG])
@@ -315,8 +310,31 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
             @gr.render(inputs=[show_type_RFLAG])
             def scewed_data_cast(SHOW_TYPE):
                 if SHOW_TYPE>0:
-                    gr.Textbox(TARGET_TYPE, label="The target type is:", scale=10)
-                    
+                    # gr.Textbox(TARGET_TYPE, label="The target type is:", scale=10)
+
+
+                    # if TARGET_TYPE != 'Not identify': #take it depending if is boolean or classes
+                        # if TARGET_TYPE == 'continuous': #print depending of target typr
+                            # text_output_1 = '\nThe target column type is '
+                            # text_output_2 = ', the elements are:'
+                        # else: #discrete case
+                            # print(colored('\nThe target column type is ', 'black', attrs=['bold']), end='')
+                    text_output_1 = '\nThe target column type is ' + 'discrete ('                                 
+                    text_output_2 = ')'+', the classes are:'
+                    # if TARGET_TYPE == 'boolean': print(colored(DATA[TARGET_COLUMN].unique(), 'green', attrs=['bold']))
+                    text_output_3 = '\n'
+                    for unique_element in DATA[TARGET_COLUMN].unique(): 
+                        print(colored(str(unique_element)+' ', 'green', attrs=['bold']), end='')
+                        text_output_3 = text_output_3+str(unique_element)+' - '
+
+
+                    with gr.Column():
+                        # breakpoint()
+                        # gr.Label(TARGET_TYPE, show_label=False)
+                        gr.Label(text_output_1+TARGET_TYPE.upper()+text_output_2, show_label=False)
+                        gr.Label(text_output_3[:len(text_output_3)-3] , show_label=False)
+                        
+                
                     #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                     # global DATAcasted
                     DATA_casted = auxiliary_fun.d_cast(DATA, TARGET_COLUMN, TARGET_TYPE)
@@ -339,7 +357,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
     
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
-        with gr.Tab(label="EDA"):
+        with gr.Tab(label="Exploratory data analysis"):
 
             print(colored('2 tab','red'))
             EDA_RFLAG = gr.State(0)
@@ -421,7 +439,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         if TARGET_TYPE == 'boolean':
                             # with gr.Column():
                             gr.Plot(fig_ROC, show_label=False)
-                            gr.Plot(disp, show_label=False)a
+                            gr.Plot(disp, show_label=False)
 
 
                     return_model = sns.lmplot(data=model_info, x="Cross-validation ID", y="Score", row="Normalization method", col="Feature selection method", hue='Model name',palette="crest", ci=None,height=4, scatter_kws={"s": 50, "alpha": 1}) 
