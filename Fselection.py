@@ -1,8 +1,11 @@
 from sklearn.ensemble import RandomForestRegressor
 from mlxtend.feature_selection import ExhaustiveFeatureSelector as EFS
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+
 
 
 def F_selector(X, y, N_features=5, FLAG=0):
@@ -10,21 +13,31 @@ def F_selector(X, y, N_features=5, FLAG=0):
     #split data into train and test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=0)
     if FLAG == 2: #N_features is only for FLAG == 0 and 2
+        breakpoint()
+        # Create an EFS object
+        # efs = EFS(estimator=LogisticRegression(),        # Use logistic regression as the classifier/estimator
+        #         min_features=1,      # The minimum number of features to consider is 1
+        #         max_features=4,      # The maximum number of features to consider is 4
+        #         scoring='accuracy',  # The metric to use to evaluate the classifier is accuracy 
+        #         cv=5)                
         efs = EFS(
-            estimator=RandomForestClassifier(
-            n_estimators=3, 
-            random_state=0), 
+            estimator=RandomForestClassifier(n_estimators=3, random_state=0), 
             min_features=1,
             max_features=N_features,
             scoring='roc_auc',
-            cv=2,
+            print_progress=True,
+            cv=2
         )
         efs = efs.fit(X_train, y_train)
-        features = list(efs.best_feature_names_)
         
-        X_train_t = efs.transform(X_train)
-        X_train_reduced = X_train[list(efs.best_feature_names_)]
-        X_test_reduced = X_test[list(efs.best_feature_names_)]
+        features = list(efs.best_feature_names_)
+        X_reduced = X[features] 
+        importancesRET = np.ones(len(features))*efs.best_score_ 
+        
+        # breakpoint()
+        # X_train_t = efs.transform(X_train)
+        # X_train_reduced = X_train[list(efs.best_feature_names_)]
+        # X_test_reduced = X_test[list(efs.best_feature_names_)]
     else:
         if FLAG == 0:
             model = RandomForestRegressor()

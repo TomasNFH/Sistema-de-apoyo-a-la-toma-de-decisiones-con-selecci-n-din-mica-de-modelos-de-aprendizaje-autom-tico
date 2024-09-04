@@ -11,11 +11,11 @@ import seaborn as sns
 from sklearn.utils import resample
 
 
-def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
+def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     colors_plot = ['#309284', '#337AEF']
     fig_ROC = 0
     fig_CM = 0
-  
+    FEATURE_N = 5 #can test to change it or make it auto to find the best N
     model_return = pd.DataFrame(columns = ['Target column', 'Taget type', 'Model name', 
                                            'Normalization method', 'Feature selection method', 
                                            'Features used', 'Number of splits', 'Cross-validation ID', 
@@ -25,7 +25,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
     FEATURE_FLAGS = np.array([0,1,2]) #dont use 2 due to time
     if Fast:
         FEATURE_FLAGS = np.array([0,1])
-    FEATURE_N = 10 #can test to change it or make it auto to find the best N
+
     if TARGET_TY == 'boolean':
         model_stack = ['RandomForestClassifier', 'LogisticRegression', 'KNeighborsClassifier', 'SupportVectorMachines']
         NORM_FLAGS = np.array([0])
@@ -33,14 +33,20 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         model_stack = ['RandomForestClassifier', 'KNeighborsClassifier', 'SupportVectorMachines']   
         NORM_FLAGS = np.array([0])
     if TARGET_TY == 'continuous':
-        model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor'] 
+        model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor'] 
         # model_stack = ['LinearRegression'] #in the case 
 
+    Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
+    Normalization_methods = ['No', 'Min-Max', 'Z-score']
+    
     ### Step 1: Feature Engeeniring ###
     IMPORTANCES_OUT = []
     CURRENT_FEATURES_OUT = []
     ALL_TRAINED_MODELS = []
     for F_FLAG in FEATURE_FLAGS:
+        print('\n\n\n')
+        print('Feature ')
+        print(F_FLAG)
         X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
         y = DATA[TARGET_COLUMN]
         X, current_Features, importances = Fselection.F_selector(X, y, N_features=FEATURE_N, FLAG=F_FLAG) #PQ MANDO Y TAMBIEN?
@@ -60,10 +66,11 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, shuffle = True)
         X = np.append(X_train, X_test,axis = 0)
         y = np.append(y_train, y_test,axis = 0)
-
         number_of_splits = 5  
         samples_of_test = int(len(X)/number_of_splits)
         for shift_idx in range(number_of_splits): 
+            print('shift_idx')
+            print(shift_idx)
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=samples_of_test, random_state=0, shuffle = False)
             #shift data
             X = np.roll(X, samples_of_test, axis=0)
@@ -71,11 +78,16 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
 
             ### Step 3: Model selection ###
             for model_name in model_stack:
-                if model_name == 'SupportVectorMachines': #LR dont work with norm 2 (boolean)
-                    NORM_FLAGS = np.array([0]) 
+                print('model_name')
+                print(model_name)
+                # if model_name == 'SupportVectorMachines': #LR dont work with norm 2 (boolean)
+                #     NORM_FLAGS = np.array([0]) 
 
                 ### Step 4: NORMALIZATION ###
-                for N_FLAG in NORM_FLAGS:              
+                for N_FLAG in NORM_FLAGS:  
+                    print('Norm ')
+                    print(N_FLAG)
+                    print('\n\n\n')            
                     ### Step 5: Model Building 
                     model = auxiliary_fun.model_dashboard(model_name)
                     model.fit(X_train, y_train)
@@ -112,7 +124,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
                             fpr = metrics_result['roc_curve'][0]
                             auc = metrics_result['roc_curve'][2]
                     model_return.loc[len(model_return.index)] = [TARGET_COLUMN, TARGET_TY, model_name, 
-                                                                 N_FLAG, F_FLAG, current_Features, 
+                                                                 Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features, 
                                                                  number_of_splits, shift_idx, CoMtx, 
                                                                  tpr, fpr, Recall, F1, auc, model.score(X_test, y_test)] 
     feature_data = pd.DataFrame([]) 
@@ -161,12 +173,16 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
 
 
     # breakpoint()
-    fig, (ax1, ax2) = plt.subplots(2, 1)
+    fig_features, (ax1, ax2) = plt.subplots(2, 1)
+    if Fast == False:
+        fig_features, (ax1, ax2, ax3) = plt.subplots(3, 1)
 
-    ax1.bar(feature_data[feature_data['Feature method']==Feature_methods[1]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'], color=colors_plot[0])
+        ax3.bar(feature_data[feature_data['Feature method']==Feature_methods[2]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[2]]['Score'], color=colors_plot[0])
+        ax3.set_ylim(0, 1)
+
+    ax1.bar(feature_data[feature_data['Feature method']==Feature_methods[0]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[0]]['Score'], color=colors_plot[0])
     ax1.set_ylim(0, 1)
     # plt.tight_layout()
-
     ax2.bar(feature_data[feature_data['Feature method']==Feature_methods[1]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'], color = colors_plot[0])
     ax2.set_ylim(0, 1)
     # plt.tight_layout()
@@ -174,11 +190,10 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
     plt.draw()
     # plt.tight_layout()
     # fig.tight_layout()
-
     ax1.set_xticklabels(ax1.get_xticklabels(), rotation=30, ha='right')
     ax2.set_xticklabels(ax2.get_xticklabels(), rotation=30, ha='right')
     plt.tight_layout()
-    fig.tight_layout()   
+    fig_features.tight_layout()   
     # breakpoint()
 
     if TARGET_TY == 'boolean':
@@ -266,6 +281,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = 1):
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
         print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
 
-    return model_return, ALL_TRAINED_MODELS, fig, fig_ROC, fig_CM
+    return model_return, ALL_TRAINED_MODELS, fig_features, fig_ROC, fig_CM
 
 

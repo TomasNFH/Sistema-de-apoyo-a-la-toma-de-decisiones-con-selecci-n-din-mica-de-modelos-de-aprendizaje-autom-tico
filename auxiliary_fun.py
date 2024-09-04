@@ -13,11 +13,16 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 
 def unique_to_int(data_in, column_name):
-
+    # breakpoint()
     dataF = pd.DataFrame(data_in, columns=data_in.columns)
     uniqueVAL = dataF[column_name].unique()
     id_unique = np.arange(len(uniqueVAL))
+    # breakpoint()
     for idU, val in enumerate(np.sort(uniqueVAL)):
+
+        if np.isnan(val):
+            breakpoint()
+        # breakpoint()
 
         dataF[column_name] = dataF[column_name].apply(lambda x: idU if x == val else x)
         #tengo un problema, ti convierto todos los 1 en 0 
@@ -29,7 +34,6 @@ def unique_to_int(data_in, column_name):
 
 
 def unique_to_int_reverse(data_in, column_name, uniqueVAL, id_unique):
-
     dataF2 = pd.DataFrame(data_in, columns=data_in.columns)
     for idU, val_to_cast in enumerate(id_unique):
         val_to_replace = uniqueVAL[idU]
@@ -47,6 +51,8 @@ def model_dashboard(model_name, N_classes=2):
         model = RandomForestRegressor(min_samples_split=10, random_state=0)        
     if model_name=='LinearRegression':
         model = linear_model.LinearRegression()
+    if model_name=='QuantileRegressor':
+        model = linear_model.QuantileRegressor(quantile=0.5, alpha=0, solver="highs")
     if model_name=='LogisticRegression':
         model = linear_model.LogisticRegression(max_iter=1000) 
     if model_name=='KNeighborsClassifier':
@@ -59,14 +65,12 @@ def model_dashboard(model_name, N_classes=2):
 def d_cast(DATA, TARGET_COLUMN, TARGET_TYPE):
     
     #cast prediction column ONLY (COULD ADD A CONTINOUS CONDITION TO ENTER)
-    # breakpoint()
     DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
 
-    for column in DATA:    
+    for column in DATA:   
+        breakpoint() 
         #if there is only one unique, we save the KEY and drop the column
         if len(DATA[column].unique()) == 1:
-            print('D_cast')
-            print(column)
             print(DATA[column].unique())
             unique_val = DATA[column][0] #preparar para recuperar para el final del modelado (guardar en un df)
             DATA = DATA.drop(column, axis=1)
