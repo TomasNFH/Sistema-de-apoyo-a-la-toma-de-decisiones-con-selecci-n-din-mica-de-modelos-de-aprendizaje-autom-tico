@@ -11,37 +11,6 @@ from sklearn import metrics
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay 
 
 
-
-def unique_to_int(data_in, column_name):
-    # breakpoint()
-    dataF = pd.DataFrame(data_in, columns=data_in.columns)
-    uniqueVAL = dataF[column_name].unique()
-    id_unique = np.arange(len(uniqueVAL))
-    # breakpoint()
-    for idU, val in enumerate(np.sort(uniqueVAL)):
-
-        if np.isnan(val):
-            breakpoint()
-        # breakpoint()
-
-        dataF[column_name] = dataF[column_name].apply(lambda x: idU if x == val else x)
-        #tengo un problema, ti convierto todos los 1 en 0 
-            #si tenia 0, ahora al reconvertirlos en 1 me queda 
-
-        #en general puedo tener el problema de castear valores que ya habia casteado
-            #tengo q asegurarme que los id_unique no tengan match con uniqueVAL
-    return dataF, uniqueVAL, id_unique
-
-
-def unique_to_int_reverse(data_in, column_name, uniqueVAL, id_unique):
-    dataF2 = pd.DataFrame(data_in, columns=data_in.columns)
-    for idU, val_to_cast in enumerate(id_unique):
-        val_to_replace = uniqueVAL[idU]
-        dataF2[column_name] = dataF2[column_name].apply(lambda x: val_to_replace if x == val_to_cast else x)
-        
-    return dataF2
-
-
 def model_dashboard(model_name, N_classes=2):
 
     if model_name=='RandomForestClassifier':
@@ -64,11 +33,12 @@ def model_dashboard(model_name, N_classes=2):
 
 def d_cast(DATA, TARGET_COLUMN, TARGET_TYPE):
     
-    #cast prediction column ONLY (COULD ADD A CONTINOUS CONDITION TO ENTER)
-    DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
+    # #cast prediction column ONLY (COULD ADD A CONTINOUS CONDITION TO ENTER)
+    # DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
 
     for column in DATA:   
-        breakpoint() 
+        # breakpoint() 
+        print(column)
         #if there is only one unique, we save the KEY and drop the column
         if len(DATA[column].unique()) == 1:
             print(DATA[column].unique())
@@ -79,8 +49,60 @@ def d_cast(DATA, TARGET_COLUMN, TARGET_TYPE):
             #if the column contain string we cast it to int
             if column_type == 'object':
                  DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
+                 print('a')
+            else:
+                print('b')
+                if column == TARGET_COLUMN:
+                    print('c')
+                    # breakpoint()
+                    a = 1
+                    #cast prediction column ONLY (COULD ADD A CONTINOUS CONDITION TO ENTER)
+                    DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
 
     return DATA
+
+
+def unique_to_int(data_in, column_name):
+    # breakpoint()
+    dataF = pd.DataFrame(data_in, columns=data_in.columns)
+    uniqueVAL = dataF[column_name].unique()
+    id_unique = np.arange(len(uniqueVAL))
+    # breakpoint()
+
+    # print('\n column name')
+    # print(column_name)
+    # print(uniqueVAL)
+
+    # np.isnan(uniqueVAL, casting=)
+    uniqueVAL1 = uniqueVAL[~pd.isnull(uniqueVAL)] #drop uniques nan
+
+    # if column_name == 'ZB1SOCUP1':
+        # breakpoint()
+    for idU, val in enumerate(np.sort(uniqueVAL1)):
+        # breakpoint()
+        # print(type(val))
+        # if np.isnan(val):
+        #     breakpoint()
+        # breakpoint()
+
+        dataF[column_name] = dataF[column_name].apply(lambda x: idU if x == val else x)
+        # data_in[column_name] = data_in[column_name].apply(lambda x: idU if x == val else x)
+        #tengo un problema, ti convierto todos los 1 en 0 
+            #si tenia 0, ahora al reconvertirlos en 1 me queda 
+
+        #en general puedo tener el problema de castear valores que ya habia casteado
+            #tengo q asegurarme que los id_unique no tengan match con uniqueVAL
+    # breakpoint()
+    return dataF, uniqueVAL, id_unique
+
+
+def unique_to_int_reverse(data_in, column_name, uniqueVAL, id_unique):
+    dataF2 = pd.DataFrame(data_in, columns=data_in.columns)
+    for idU, val_to_cast in enumerate(id_unique):
+        val_to_replace = uniqueVAL[idU]
+        dataF2[column_name] = dataF2[column_name].apply(lambda x: val_to_replace if x == val_to_cast else x)
+        
+    return dataF2
 
 
 def computemetrics(model, X_test, y_test):
