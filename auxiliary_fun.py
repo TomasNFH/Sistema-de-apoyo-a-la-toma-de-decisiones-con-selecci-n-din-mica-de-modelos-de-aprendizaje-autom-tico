@@ -35,9 +35,10 @@ def d_cast(DATA, TARGET_COLUMN, TARGET_TYPE):
     
     # #cast prediction column ONLY (COULD ADD A CONTINOUS CONDITION TO ENTER)
     # DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
-
+    # auxDATA = DATA
     for column in DATA:   
         # breakpoint() 
+        
         print(column)
         #if there is only one unique, we save the KEY and drop the column
         if len(DATA[column].unique()) == 1:
@@ -49,16 +50,15 @@ def d_cast(DATA, TARGET_COLUMN, TARGET_TYPE):
             #if the column contain string we cast it to int
             if column_type == 'object':
                  DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
-                 print('a')
+                #  print('a')
             else:
-                print('b')
+                # print('b')
                 if column == TARGET_COLUMN:
-                    print('c')
+                    # print('c')
                     # breakpoint()
                     a = 1
                     #cast prediction column ONLY (COULD ADD A CONTINOUS CONDITION TO ENTER)
                     DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
-
     return DATA
 
 
