@@ -79,7 +79,16 @@ def get_column_model(number):
     return 0
 
 def get_entry(data_input):
+    breakpoint()
     data_input = data_input.to_numpy()  
+
+    ###casteo
+    columns = data_input.columns
+    input_casted = auxiliary_fun.cast_input(data_input, columns, rosseta)
+
+
+    ###formato
+
     predicted_val = selected_model.predict(data_input.reshape(1,-1))
     return predicted_val[0]
 
@@ -248,7 +257,10 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                             gr.Label(text_output_3[:len(text_output_3)-3] , show_label=False)
 
                         #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
-                        DATA_casted = auxiliary_fun.d_cast(DATA, TARGET_COLUMN, TARGET_TYPE)
+                        global rosseta
+                        DATA_casted, rosseta = auxiliary_fun.d_cast(DATA, TARGET_COLUMN, TARGET_TYPE)
+                        # np.searchsorted(uniqueVAL_target, predicted, side='right') 
+                        # DATA_casted = DATA
                         print(colored(DATA_casted, 'yellow'))
 
                             ### Step 3.1: Exploratory Data Analyzis (MANUAL)###
@@ -261,6 +273,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         global DROP_COL
                         global DROP_ROW
                         DATA_cleaned, DROP_COL, DROP_ROW = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
+                        # DATA_cleaned = DATA_casted
 
                     if SCEWED_FLAG == True:
                         scewed_yes_no_btn = gr.Radio(["Yes", "No"], label="Cast to boolean (once selected there is no undo):")
@@ -283,7 +296,9 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         gr.Label(text_output_3[:len(text_output_3)-3] , show_label=False)
                         
                     #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
-                    DATA_casted = auxiliary_fun.d_cast(DATA, TARGET_COLUMN, TARGET_TYPE)
+                    global rosseta
+                    DATA_casted, rosseta = auxiliary_fun.d_cast(DATA, TARGET_COLUMN, TARGET_TYPE)
+                    # DATA_casted = DATA
 
                         ### Step 3.1: Exploratory Data Analyzis (MANUAL)###
                     global manualEDA, missing4rows
@@ -295,7 +310,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     global DROP_COL
                     global DROP_ROW
                     DATA_cleaned, DROP_COL, DROP_ROW = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
-
+                    # DATA_cleaned = DATA_casted
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
@@ -331,7 +346,6 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     dtale.show(open_browser=True)
                     dtale.show()
 
-
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
 
@@ -361,7 +375,6 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                             gr.Plot(disp, show_label=False)
 
                     #change labels to better visualization
-                    # breakpoint()
                     # Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
                     # Normalization_methods = ['No', 'Min-Max', 'Z-score']
                     # NormMtd_used = len(model_info['Normalization method'].unique())  
@@ -377,7 +390,6 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     #         print(Feature_methods[current_feat])
                     #         # fig_idx = current_norm*current_feat
 
-                    #         breakpoint()
                     #         # plt.subplot(NormMtd_used, FeatSel_used, fig_idx)
                     #         # plt.plot()
 
@@ -386,7 +398,6 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
 
 
                     # model_info_plot = model_info.rename(columns={'Normalization method':'Norm.', 'Feature selection method':'Feat.'}) 
-                    # breakpoint()
                     
                     return_model = sns.lmplot(data=model_info.rename(columns={'Normalization method':'Norm.', 'Feature selection method':'Feat.'}), 
                                               x="Cross-validation ID", 
@@ -454,6 +465,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     training_example = training_example.drop("index", axis='columns')
                     prediction_example = selected_model.predict(training_example.to_numpy())
                     prediction_example = pd.DataFrame(prediction_example, columns=['Prediction'])
+                    prediction_example = auxiliary_fun.de_cast_PREDICTION(prediction_example, TARGET_COLUMN, rosseta)
                     indexes_unique = []
                     for unique_prediction in prediction_example['Prediction'].unique():
                         print(unique_prediction)
@@ -464,10 +476,11 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         gr.DataFrame(training_example.loc[indexes_unique].head(5) , label="Example of inputs:", scale=5, interactive='False')
                         gr.DataFrame(prediction_example.loc[indexes_unique].head(5) , label="Prediction:", scale=1, interactive='False')
 
+                    breakpoint()
                     gr.Interface(
                         fn=get_entry,
                         inputs=[gr.Dataframe(
-                                headers=list(model_info['Features used'].loc[index_model]),
+                                headers=list(model_info['Features used'].loc[index_model][::-1]),
                                 # datatype=["str", "number", "str"],
                                 row_count=1,
                                 col_count=(len(model_info['Features used'].loc[index_model]), "fixed"),
