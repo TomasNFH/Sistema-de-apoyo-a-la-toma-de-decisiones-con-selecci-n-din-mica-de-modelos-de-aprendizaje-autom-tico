@@ -32,85 +32,65 @@ def model_dashboard(model_name, N_classes=2):
  
     return model
 
-def d_cast(DATA, TARGET_COLUMN, TARGET_TYPE):
+def d_cast(DATA, TARGET_COLUMN):
     ROSSETA = {}
+    print(DATA.head())
 
-    # breakpoint()
     # #cast prediction column ONLY (COULD ADD A CONTINOUS CONDITION TO ENTER)
     # DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
-    # auxDATA = DATA
     for column in DATA:  
-
-
 
         # a flag to tell when to write
         cast_flag = False
-        uniqueVAL = 0
-        id_unique = 0
-        a = 0
-        b = 0
-        # breakpoint() 
         print(column)
         #if there is only one unique, we save the KEY and drop the column
         if len(DATA[column].unique()) == 1:
-            print(DATA[column].unique())
-            unique_val = DATA[column][0] #preparar para recuperar para el final del modelado (guardar en un df)
-            DATA = DATA.drop(column, axis=1)
-            breakpoint()
-            print('q hago aca? <valor único>')
+            print(10)
+            cast_flag = True
 
-        else: #if we drop we cant acces the colum type    
+            # print(DATA[column].unique())
+            uniqueVAL = DATA[column][0] #preparar para recuperar para el final del modelado (guardar en un df)
+            id_unique = 0
+            DATA = DATA.drop(column, axis=1)
+            a,b = -99, -99
+            # breakpoint()
+            # print('q hago aca? <valor único>')
+
+        else: #if we drop we cant acces the colum type 
             column_type = DATA[column].dtype
             
             #if the column contain string we cast it to int
             if column_type == 'object':
+                print(20)
                 cast_flag = True
                 DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
 
-                model = linear_model.LinearRegression()
-                #q pasa con tipo clase?
-                model.fit(uniqueVAL.reshape(-1, 1), id_unique.reshape(-1, 1))
-                a = model.coef_      
-                b = model.intercept_ 
-
+                # model = linear_model.LinearRegression()
+                #q pasa con regresión lineal de strings? No tiene sentido (a,b=-1)
+                a = -1
+                b = -1
                 
-                #  print('a')
             else:
-                # print('b')
                 if column == TARGET_COLUMN:
+                    print(30)
                     cast_flag = True
-                    # print('c')
-                    # a = 1
-                    #cast prediction column ONLY (COULD ADD A CONTINOUS CONDITION TO ENTER)
-                    # DATA, uniqueVAL_target, id_unique_target = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
                     DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
 
                     model = linear_model.LinearRegression()
                     model.fit(uniqueVAL.reshape(-1, 1), id_unique.reshape(-1, 1))
                     a = model.coef_      
                     b = model.intercept_ 
-
-                    # plt.plot(uniqueVAL, id_unique)
-                    # y_hat = a*uniqueVAL+b 
-                    # plt.plot(uniqueVAL, y_hat[0])
-                    # plt.savefig('test') 
-                    # breakpoint()
         if cast_flag:
             current_column= {column : [uniqueVAL, id_unique, a, b]} 
             ROSSETA.update(current_column)
-        # breakpoint()
-        # a=2
-        # b=0
-        
-    # current_column= {'name': column, 'X': uniqueVAL_target, 'Y': id_unique_target} 
-    
-    breakpoint()
-    # return DATA, uniqueVAL_target, id_unique_target
+
+    # breakpoint()
     return DATA, ROSSETA
 
 
 def de_cast_PREDICTION(prediction, target_column, rosseta):
 
+    # breakpoint()
     # y=ax+b
     a = rosseta[target_column][2] 
     b = rosseta[target_column][3] 
@@ -120,7 +100,7 @@ def de_cast_PREDICTION(prediction, target_column, rosseta):
     # prediction_decasted = np.ones(len(prediction)) 
     prediction_decasted = prediction*0 
     for idx, y_hat in enumerate(prediction.to_numpy()):
-        if y_hat>=id_unique[-2] or y_hat<0:
+        if y_hat>id_unique[-1] or y_hat<0:
             x_hat = (y_hat-b)/a 
             # breakpoint()
             aux = 2
@@ -137,7 +117,16 @@ def de_cast_PREDICTION(prediction, target_column, rosseta):
     return prediction_decasted
 
 def cast_input(data_input, columns, rosseta):
-    breakpoint()
+    for idx, column in enumerate(columns):
+        print(column)
+        # breakpoint()
+        print(data_input[0][idx])
+
+        #verify if is needed to cast <if column is in rosseta.keys()>
+        if column in rosseta.keys():
+            breakpoint()
+            print('know we cast')
+    return data_input
 
 def unique_to_int(data_in, column_name):
     # breakpoint()
