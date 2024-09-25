@@ -91,6 +91,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                     ### Step 5: Model Building 
                     model = auxiliary_fun.model_dashboard(model_name)
                     model.fit(X_train, y_train)
+                    # breakpoint()
                     ALL_TRAINED_MODELS.append(model)
                     prediction = model.predict(X_test)
                     

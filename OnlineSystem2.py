@@ -79,18 +79,18 @@ def get_column_model(number):
     return 0
 
 def get_entry(data_input):
-    # breakpoint()
+    data_input = data_input[data_input.columns[::-1]]
     columns = data_input.columns
     data_input = data_input.to_numpy()  
 
     ###casteo
     input_casted = auxiliary_fun.cast_input(data_input, columns, rosseta)
 
-
     ###formato
-    breakpoint()
-    predicted_val = selected_model.predict(data_input.reshape(1,-1))
-    return predicted_val[0]
+    predicted_val = selected_model.predict(input_casted)
+    predicted_val = auxiliary_fun.de_cast_PREDICTION(pd.DataFrame(predicted_val), TARGET_COLUMN, rosseta) 
+
+    return predicted_val.iloc[0,0] 
 
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
@@ -465,13 +465,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     training_example = training_example.drop("index", axis='columns')
                     prediction_example = selected_model.predict(training_example.to_numpy())
                     prediction_example = pd.DataFrame(prediction_example, columns=['Prediction'])
-                    print('antes')
-                    print(prediction_example)
                     prediction_example = auxiliary_fun.de_cast_PREDICTION(prediction_example, TARGET_COLUMN, rosseta)
-                    print('despues')
-                    print(prediction_example)
-                    print('el model sel es')
-                    print(selected_model)
                     indexes_unique = []
                     for unique_prediction in prediction_example['Prediction'].unique():
                         # print(unique_prediction)
@@ -479,11 +473,9 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         indexes_unique.append(aux_indexes[0])
 
                     with gr.Row():
-                        # breakpoint()
                         gr.DataFrame(training_example[training_example.columns[::-1]].loc[indexes_unique].head(5)  , label="Example of inputs:", scale=5, interactive='False')
                         gr.DataFrame(prediction_example.loc[indexes_unique].head(5) , label="Prediction:", scale=1, interactive='False')
 
-                    # breakpoint()
                     gr.Interface(
                         fn=get_entry,
                         inputs=[gr.Dataframe(
