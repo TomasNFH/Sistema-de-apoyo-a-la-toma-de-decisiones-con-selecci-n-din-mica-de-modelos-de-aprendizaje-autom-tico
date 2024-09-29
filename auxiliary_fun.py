@@ -43,6 +43,8 @@ def d_cast(DATA, TARGET_COLUMN):
         # a flag to tell when to write
         cast_flag = False
         print(column)
+        
+        # breakpoint()
         #if there is only one unique, we save the KEY and drop the column
         if len(DATA[column].unique()) == 1:
             print(10)
@@ -58,7 +60,27 @@ def d_cast(DATA, TARGET_COLUMN):
 
         else: #if we drop we cant acces the colum type 
             column_type = DATA[column].dtype
-            
+            print(column_type)
+            #if the column contain string we cast it to int
+            if column_type == 'bool':
+                print(25)
+                cast_flag = True
+                # breakpoint()
+
+
+                
+                DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
+                
+                breakpoint()
+                
+                #agregar generalidad
+                # uniqueVAL = ['False', 'True']
+                uniqueVAL = np.array(['False', 'True']) 
+                
+                # model = linear_model.LinearRegression()
+                #q pasa con regresión lineal de strings? No tiene sentido (a,b=-1)
+                a = -1
+                b = -1            
             #if the column contain string we cast it to int
             if column_type == 'object':
                 print(20)
@@ -88,45 +110,157 @@ def d_cast(DATA, TARGET_COLUMN):
     return DATA, ROSSETA
 
 
-def de_cast_PREDICTION(prediction, target_column, rosseta):
+# def de_cast_PREDICTION(prediction, target_column, rosseta):
+
+#     breakpoint()
+#     # y=ax+b
+#     a = rosseta[target_column][2] 
+#     b = rosseta[target_column][3] 
+#     uniqueVAL = rosseta[target_column][0]
+#     id_unique = rosseta[target_column][1]
+#     # prediction = prediction.to_numpy()
+#     # prediction_decasted = np.ones(len(prediction)) 
+#     prediction_decasted = prediction*0 
+#     for idx, y_hat in enumerate(prediction.to_numpy()):
+#         if y_hat>id_unique[-1] or y_hat<0:
+#             x_hat = (y_hat-b)/a 
+#             # breakpoint()
+#             aux = 2
+#         else:
+#             idx_search = np.searchsorted(id_unique, y_hat, side='left')
+            
+#             y_1, y_2 = id_unique[idx_search-1], id_unique[idx_search]
+#             x_1, x_2 = uniqueVAL[idx_search-1], uniqueVAL[idx_search]
+#             t_hat = (y_hat-y_1)/(y_2-y_1)
+#             x_hat = x_2*t_hat + x_1*(1-t_hat) 
+#         # prediction_decasted[idx] = x_hat
+#         prediction_decasted.loc[idx] = x_hat
+
+#     return prediction_decasted
+
+def de_cast_PREDICTION(casted_data, columns, rosseta):
+    # breakpoint()
+
+    decasted_data = casted_data
+    for idx_column, column in enumerate(columns):
+        # breakpoint()
+        #case we need to decast
+        if column in rosseta.keys():
+            # y=ax+b
+            a = rosseta[column][2] 
+            b = rosseta[column][3] 
+            uniqueVAL = rosseta[column][0]
+            id_unique = rosseta[column][1]
+            
+            
+            for idx_row, y_hat in enumerate(casted_data.iloc[:,idx_column].to_numpy()):
+                # breakpoint()
+                #identity finding
+                if y_hat in id_unique:
+                    # breakpoint()
+                    idx_cast = np.where(id_unique == y_hat) 
+                    # cast_input[idx] = uniqueVAL[idx_cast[0][0]] 
+                    decasted_data.iloc[idx_row,idx_column] = uniqueVAL[idx_cast[0][0]] 
+                #identity not found
+                else:
+                    # breakpoint()
+                    if y_hat>id_unique[-1] or y_hat<0:
+                        x_hat = (y_hat-b)/a 
+                        # breakpoint()
+                        aux = 2
+                    else:
+                        idx_search = np.searchsorted(id_unique, y_hat, side='left')
+                        
+                        y_1, y_2 = id_unique[idx_search-1], id_unique[idx_search]
+                        x_1, x_2 = uniqueVAL[idx_search-1], uniqueVAL[idx_search]
+                        t_hat = (y_hat-y_1)/(y_2-y_1)
+                        x_hat = x_2*t_hat + x_1*(1-t_hat) 
+
+                    # prediction_decasted[idx] = x_hat
+                    decasted_data.iloc[idx_row,idx_column] = x_hat
+
+    return decasted_data
+
+
+#not nly used for predictions
+def de_cast_PREDICTION_print(casted_data, columns, rosseta):
+    breakpoint()
+
+    decasted_data = casted_data
+    for idx_column, column in enumerate(columns):
+        breakpoint()
+        #case we need to decast
+        if column in rosseta.keys():
+            # y=ax+b
+            a = rosseta[column][2] 
+            b = rosseta[column][3] 
+            uniqueVAL = rosseta[column][0]
+            id_unique = rosseta[column][1]
+            
+            
+            for idx_row, y_hat in enumerate(casted_data.iloc[:,idx_column].to_numpy()):
+                breakpoint()
+                #identity finding
+                if y_hat in id_unique:
+                    # breakpoint()
+                    idx_cast = np.where(id_unique == y_hat) 
+                    # cast_input[idx] = uniqueVAL[idx_cast[0][0]] 
+                    decasted_data.iloc[idx_row,idx_column] = uniqueVAL[idx_cast[0][0]] 
+                #identity not found
+                else:
+                    # breakpoint()
+                    if y_hat>id_unique[-1] or y_hat<0:
+                        x_hat = (y_hat-b)/a 
+                        # breakpoint()
+                        aux = 2
+                    else:
+                        idx_search = np.searchsorted(id_unique, y_hat, side='left')
+                        
+                        y_1, y_2 = id_unique[idx_search-1], id_unique[idx_search]
+                        x_1, x_2 = uniqueVAL[idx_search-1], uniqueVAL[idx_search]
+                        t_hat = (y_hat-y_1)/(y_2-y_1)
+                        x_hat = x_2*t_hat + x_1*(1-t_hat) 
+
+                    # prediction_decasted[idx] = x_hat
+                    decasted_data.iloc[idx_row,idx_column] = x_hat
+
+    return decasted_data
+
+#usarlo para castear las entradas
+def cast_input(data_input, rosseta):
 
     # breakpoint()
-    # y=ax+b
-    a = rosseta[target_column][2] 
-    b = rosseta[target_column][3] 
-    uniqueVAL = rosseta[target_column][0]
-    id_unique = rosseta[target_column][1]
-    # prediction = prediction.to_numpy()
-    # prediction_decasted = np.ones(len(prediction)) 
-    prediction_decasted = prediction*0 
-    for idx, y_hat in enumerate(prediction.to_numpy()):
-        if y_hat>id_unique[-1] or y_hat<0:
-            x_hat = (y_hat-b)/a 
-            # breakpoint()
-            aux = 2
-        else:
-            idx_search = np.searchsorted(id_unique, y_hat, side='left')
-            
-            y_1, y_2 = id_unique[idx_search-1], id_unique[idx_search]
-            x_1, x_2 = uniqueVAL[idx_search-1], uniqueVAL[idx_search]
-            t_hat = (y_hat-y_1)/(y_2-y_1)
-            x_hat = x_2*t_hat + x_1*(1-t_hat) 
-        # prediction_decasted[idx] = x_hat
-        prediction_decasted.loc[idx] = x_hat
 
-    return prediction_decasted
+    columns = data_input.columns
 
-def cast_input(data_input, columns, rosseta):
-    for idx, column in enumerate(columns):
+    # casted_input = np.ones(len(data_input))*-1
+    casted_input = data_input
+
+    idx_row = 0
+    for idx_column, column in enumerate(columns):
+
+        current_value = data_input.iloc[idx_row, idx_column]
         print(column)
-        # breakpoint()
-        print(data_input[0][idx])
-
+        print(current_value)
+        
         #verify if is needed to cast <if column is in rosseta.keys()>
         if column in rosseta.keys():
-            breakpoint()
-            print('know we cast')
-    return data_input
+            # breakpoint()
+            a = rosseta[column][2] 
+            b = rosseta[column][3] 
+            uniqueVAL = rosseta[column][0]
+            id_unique = rosseta[column][1]
+            
+            #search if the value exist has already an ID
+            if current_value in uniqueVAL:
+                # breakpoint()
+                idx_cast = np.where(uniqueVAL == current_value) 
+                casted_input.iloc[idx_row, idx_column] = id_unique[idx_cast[0][0]] 
+            else:
+                breakpoint()
+                print('no existe en la id')
+
+    return casted_input
 
 def unique_to_int(data_in, column_name):
     # breakpoint()
@@ -143,8 +277,12 @@ def unique_to_int(data_in, column_name):
     uniqueVAL1 = uniqueVAL[~pd.isnull(uniqueVAL)] #drop uniques nan
     uniqueVAL1 = np.sort(uniqueVAL1)
     # if column_name == 'ZB1SOCUP1':
+
     # breakpoint()
     for idU, val in enumerate(uniqueVAL1):
+
+        # if column_name == 'neutral':
+            # breakpoint()
         
         # print(val)
         # breakpoint()

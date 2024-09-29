@@ -79,18 +79,42 @@ def get_column_model(number):
     return 0
 
 def get_entry(data_input):
-    data_input = data_input[data_input.columns[::-1]]
-    columns = data_input.columns
-    data_input = data_input.to_numpy()  
+    # breakpoint()
+    input_casted = auxiliary_fun.cast_input(data_input, rosseta)
 
-    ###casteo
-    input_casted = auxiliary_fun.cast_input(data_input, columns, rosseta)
+    # breakpoint()
+    input_casted = input_casted[input_casted.columns[::-1]]
+    # columns = input_casted.columns
+    # breakpoint()
+    input_casted = input_casted.to_numpy().astype(np.float64)
+    # input_casted.astype(np.float64)  
 
+    ###casteo <no va esto> ----- tengo q castear scotland a 2 ponele -----
+    # input_casted = auxiliary_fun.cast_input(data_input, columns, rosseta)
+    # breakpoint()
     ###formato
-    predicted_val = selected_model.predict(input_casted)
-    predicted_val = auxiliary_fun.de_cast_PREDICTION(pd.DataFrame(predicted_val), TARGET_COLUMN, rosseta) 
+    predicted_val = selected_model.predict(input_casted[0].reshape(1,-1)) 
+    predicted_val = auxiliary_fun.de_cast_PREDICTION(pd.DataFrame(predicted_val), [TARGET_COLUMN], rosseta) 
 
+    # breakpoint()
     return predicted_val.iloc[0,0] 
+# def get_entry(data_input):
+#     breakpoint()
+#     input_casted = auxiliary_fun.cast_input(data_input, rosseta)
+
+#     data_input = data_input[data_input.columns[::-1]]
+#     columns = data_input.columns
+#     data_input = data_input.to_numpy()  
+
+#     ###casteo <no va esto> ----- tengo q castear scotland a 2 ponele -----
+#     # input_casted = auxiliary_fun.cast_input(data_input, columns, rosseta)
+
+#     ###formato
+#     predicted_val = selected_model.predict(data_input)
+#     predicted_val = auxiliary_fun.de_cast_PREDICTION(pd.DataFrame(predicted_val), TARGET_COLUMN, rosseta) 
+
+#     breakpoint()
+#     return predicted_val.iloc[0,0] 
 
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
@@ -213,7 +237,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     column_dropdown = gr.Dropdown(list(VARIABLES_OF_DATA), label="Please select the varaible to predict from the next list: ", filterable=False)
                     column_dropdown.change(fn=var_acquisition, inputs=column_dropdown, outputs=None, scroll_to_output=True)
                     column_dropdown.input(lambda count: count + 1, column_dropdown_RFLAG, column_dropdown_RFLAG, scroll_to_output=True)
-                    
+                    # breakpoint()DA
             #render: 
             #           <The target type is:> 
             @gr.render(inputs=[column_dropdown_RFLAG])
@@ -461,11 +485,20 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     current_model_selected_idx = model_selection_list.index(current_model_selected)
                     index_model = idx_model_sl_lst[current_model_selected_idx] 
                     selected_model = model_list[dropdown_Mpredictor] 
-                    training_example = DATA_cleaned[model_info['Features used'].loc[index_model]].reset_index()
+                    # print(model_info['Features used'])
+                    # breakpoint()
+                    feature_used =  model_info['Features used'].loc[index_model]  
+                    training_example = DATA_cleaned[feature_used].reset_index()
                     training_example = training_example.drop("index", axis='columns')
                     prediction_example = selected_model.predict(training_example.to_numpy())
                     prediction_example = pd.DataFrame(prediction_example, columns=['Prediction'])
-                    prediction_example = auxiliary_fun.de_cast_PREDICTION(prediction_example, TARGET_COLUMN, rosseta)
+
+                    #DeCast training data and prediction
+                    # breakpoint()
+                    training_example2 = auxiliary_fun.de_cast_PREDICTION(training_example, feature_used, rosseta)
+                    prediction_example = auxiliary_fun.de_cast_PREDICTION(prediction_example, [TARGET_COLUMN], rosseta)
+                    
+
                     indexes_unique = []
                     for unique_prediction in prediction_example['Prediction'].unique():
                         # print(unique_prediction)
@@ -473,8 +506,10 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         indexes_unique.append(aux_indexes[0])
 
                     with gr.Row():
-                        gr.DataFrame(training_example[training_example.columns[::-1]].loc[indexes_unique].head(5)  , label="Example of inputs:", scale=5, interactive='False')
-                        gr.DataFrame(prediction_example.loc[indexes_unique].head(5) , label="Prediction:", scale=1, interactive='False')
+                        # gr.DataFrame(training_example[training_example.columns[::-1]].loc[indexes_unique].head(5)  , label="Example of inputs:", scale=5, interactive='False')
+                        # gr.DataFrame(prediction_example.loc[indexes_unique].head(5) , label="Prediction:", scale=1, interactive='False')
+                        gr.DataFrame(training_example[training_example.columns[::-1]]  , label="Example of inputs:", scale=5, interactive='False')
+                        gr.DataFrame(prediction_example, label="Prediction:", scale=1, interactive='False')
 
                     gr.Interface(
                         fn=get_entry,
