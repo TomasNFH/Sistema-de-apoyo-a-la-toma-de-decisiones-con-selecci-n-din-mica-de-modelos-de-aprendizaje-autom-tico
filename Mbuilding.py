@@ -9,9 +9,11 @@ from termcolor import colored
 import matplotlib.pyplot as plt 
 import seaborn as sns
 from sklearn.utils import resample
+import time
 
 
 def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
+    start_time = time.time()
     colors_plot = ['#309284', '#337AEF']
     fig_ROC = 0
     fig_CM = 0
@@ -33,8 +35,8 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         model_stack = ['RandomForestClassifier', 'KNeighborsClassifier', 'SupportVectorMachines']   
         NORM_FLAGS = np.array([0])
     if TARGET_TY == 'continuous':
-        model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor'] 
-        # model_stack = ['LinearRegression'] #in the case 
+        # model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor'] 
+        model_stack = ['LinearRegression', 'RandomForestRegressor','QuantileRegressor'] 
 
     Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
     Normalization_methods = ['No', 'Min-Max', 'Z-score']
@@ -54,28 +56,39 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         CURRENT_FEATURES_OUT.append(current_Features)
 
         #BOOTSTRAPPING
+        # min_number_of_samples = 50
+        # number_of_samples = 100
+        # if number_of_samples >= min_number_of_samples:
+        #     X, y = resample(X, y, n_samples=number_of_samples, replace=True) 
+        # else:
+        #     X, y = resample(X, y, n_samples=min_number_of_samples, replace=True)
         min_number_of_samples = 50
-        number_of_samples = 100
-        if number_of_samples >= min_number_of_samples:
-            X, y = resample(X, y, n_samples=number_of_samples, replace=True) 
-        else:
-            X, y = resample(X, y, n_samples=min_number_of_samples, replace=True)
+        number_of_samples = X.shape[0]
+        if number_of_samples < min_number_of_samples:
+            X, y = resample(X, y, n_samples=min_number_of_samples, replace=True) 
 
         ### Step 2: Cross Validation ###
         #suffle the data
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, shuffle = True)
         X = np.append(X_train, X_test,axis = 0)
         y = np.append(y_train, y_test,axis = 0)
+
+        print(X)
+        # verification of roll
+        # X = X[0:34:,:]
+        # y = y[0:34] 
+
         number_of_splits = 5  
         samples_of_test = int(len(X)/number_of_splits)
         for shift_idx in range(number_of_splits): 
             print('shift_idx')
             print(shift_idx)
+            # breakpoint()
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=samples_of_test, random_state=0, shuffle = False)
             #shift data
             X = np.roll(X, samples_of_test, axis=0)
             y = np.roll(y, samples_of_test, axis=0)
-
+            # breakpoint()
             ### Step 3: Model selection ###
             for model_name in model_stack:
                 print('model_name')
@@ -281,6 +294,18 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     if TARGET_TY == 'continuous':
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
         print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
+
+    end_time = time.time()
+    total_seconds = end_time-start_time
+    print('\n\n')
+    print('the time is:')
+    print(total_seconds)
+
+    minutes = int(total_seconds // 60)
+    seconds = int(total_seconds % 60)
+
+    print('{minutes}:{seconds}'.format(minutes=minutes, seconds=seconds))
+
 
     return model_return, ALL_TRAINED_MODELS, fig_features, fig_ROC, fig_CM
 
