@@ -203,8 +203,8 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         DATA = pd.read_csv(FILE.name)
                     VARIABLES_OF_DATA = DATA.columns #used in target column acq
 
-                    gr.Markdown("## The head of the dataset is: ")
-                    gr.DataFrame(DATA.head(5), interactive='False')
+                    gr.Markdown("## The dataset is: ")
+                    gr.DataFrame(DATA, interactive='False')
 
                     column_dropdown = gr.Dropdown(list(VARIABLES_OF_DATA), label="Please select the varaible to predict from the next list: ", filterable=False)
                     column_dropdown.change(fn=var_acquisition, inputs=column_dropdown, outputs=None, scroll_to_output=True)
@@ -289,6 +289,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                     global rosseta
                     DATA_casted, rosseta = auxiliary_fun.d_cast(DATA, TARGET_COLUMN)
+                    print(colored(DATA_casted, 'yellow'))
 
                         ### Step 3.1: Exploratory Data Analyzis (MANUAL)###
                     global manualEDA, missing4rows
@@ -301,6 +302,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     global DROP_ROW
                     DATA_cleaned, DROP_COL, DROP_ROW = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
 
+                    #aca tengo q descastear y mandar a eda
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
 
@@ -314,12 +316,29 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
             def scewed_data_cast(EDA):
                 if EDA>0:
                     gr.Markdown("## Table with descriptive statistics of variables: ")
-                    gr.DataFrame(DATA_cleaned.describe(), interactive='False')
+                    gr.DataFrame(DATA.describe(), interactive='False')
                     gr.Markdown("## Table with information of the variables: ")
                     gr.DataFrame(manualEDA, interactive='False')
                     gr.Markdown("## Table with information of the rows: ")
                     gr.DataFrame(missing4rows, interactive='False')
 
+                    ### Step 3.2: Exploratory Data Analyzis (AUTO)###
+                    dtale.show(DATA) 
+                    dtale.show(open_browser=True)
+                    dtale.show()
+
+##########################    ##########################    ##########################    ##########################    ##########################    ##########################
+
+
+        with gr.Tab(label="Data integrity"):
+            INT_RFLAG = gr.State(0)            
+            calculate_button = gr.Button("Start exploratory data integrity")
+            calculate_button.click(lambda count: count + 1, INT_RFLAG, INT_RFLAG, scroll_to_output=True)
+
+            @gr.render(inputs=[INT_RFLAG])
+            def scewed_data_cast(INT):
+                if INT>0:
+                    
                     gr.Markdown('## Resultado de Data Cleaning:')
                     gr.Markdown('Cantidad de columnas eliminadas: '+
                                 str(len(DROP_COL))+
@@ -330,13 +349,18 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                                 '%)')
                     gr.Markdown('The result of the number of patients is: '+str(len(DATA_cleaned)))
 
+
+                    DATA_cleaned_decasted = auxiliary_fun.de_cast_PREDICTION(DATA_cleaned, DATA_cleaned.columns, rosseta)  
+                    gr.DataFrame(DATA, interactive='False')
+                    gr.DataFrame(DATA_cleaned_decasted, interactive='False')
+                    breakpoint()
                     ### Step 3.2: Exploratory Data Analyzis (AUTO)###
-                    dtale.show(DATA_cleaned) 
-                    dtale.show(open_browser=True)
-                    dtale.show()
+                    # dtale.show(DATA_cleaned) 
+                    # dtale.show(open_browser=True)
+                    # dtale.show()
+
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
-
 
         with gr.Tab(label="Dynamic models"):
 
@@ -434,7 +458,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     with gr.Row():
                         # gr.DataFrame(training_example[training_example.columns[::-1]]  , label="Example of inputs:", scale=5, interactive='False')
                         # gr.DataFrame(prediction_example, label="Prediction:", scale=1, interactive='False')
-                        gr.DataFrame(training_example.loc[indexes_unique].head(5) , label="Example of inputs:", scale=5, interactive='False')
+                        gr.DataFrame(training_example[training_example.columns[::-1]].loc[indexes_unique].head(5) , label="Example of inputs:", scale=5, interactive='False')
                         gr.DataFrame(prediction_example.loc[indexes_unique].head(5) , label="Prediction:", scale=1, interactive='False')
 
 

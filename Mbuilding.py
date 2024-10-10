@@ -46,9 +46,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     CURRENT_FEATURES_OUT = []
     ALL_TRAINED_MODELS = []
     for F_FLAG in FEATURE_FLAGS:
-        print('\n\n\n')
-        print('Feature ')
-        print(F_FLAG)
         X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
         y = DATA[TARGET_COLUMN]
         X, current_Features, importances = Fselection.F_selector(X, y, N_features=FEATURE_N, FLAG=F_FLAG) #PQ MANDO Y TAMBIEN?
@@ -73,7 +70,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         X = np.append(X_train, X_test,axis = 0)
         y = np.append(y_train, y_test,axis = 0)
 
-        print(X)
         # verification of roll
         # X = X[0:34:,:]
         # y = y[0:34] 
@@ -81,8 +77,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         number_of_splits = 5  
         samples_of_test = int(len(X)/number_of_splits)
         for shift_idx in range(number_of_splits): 
-            print('shift_idx')
-            print(shift_idx)
             # breakpoint()
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=samples_of_test, random_state=0, shuffle = False)
             #shift data
@@ -91,16 +85,11 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
             # breakpoint()
             ### Step 3: Model selection ###
             for model_name in model_stack:
-                print('model_name')
-                print(model_name)
                 # if model_name == 'SupportVectorMachines': #LR dont work with norm 2 (boolean)
                 #     NORM_FLAGS = np.array([0]) 
 
                 ### Step 4: NORMALIZATION ###
-                for N_FLAG in NORM_FLAGS:  
-                    print('Norm ')
-                    print(N_FLAG)
-                    print('\n\n\n')            
+                for N_FLAG in NORM_FLAGS:              
                     ### Step 5: Model Building 
                     model = auxiliary_fun.model_dashboard(model_name)
                     model.fit(X_train, y_train)
@@ -224,15 +213,11 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         number_of_models = len(model_return['Model name'].unique())
         grouped_by_model = model_return.groupby('Model name')
         for model_name_loop in model_return['Model name'].unique():
-            print(model_name_loop)
             curve_id = 0
             current_model_data = grouped_by_model.get_group(model_name_loop)
             current_model_data = current_model_data.sort_values(by=['AUC','Score','F1 score'], ascending=False)
             for index, row in current_model_data.iterrows():
                 if curve_id < max_curves_per_model:
-                    print(curve_id)
-                    print('lower than')
-                    # breakpoint()
 
                     disp = ConfusionMatrixDisplay(row['Confusion matrix'],
                                                 display_labels=list(classes_of_target))
@@ -257,18 +242,13 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         fig_ROC = plt.figure()
         model_idx = 0
         max_curves_per_model = 1
-        print(colored('ROC','blue'))
-        print(colored(len(model_return['Model name'].unique()) ,'blue'))
         # breakpoint()
         for model_name_loop in model_return['Model name'].unique():
-            print(model_name_loop)
             curve_id = 0
             current_model_data = grouped_by_model.get_group(model_name_loop)
             current_model_data = current_model_data.sort_values(by=['AUC','Score','F1 score'], ascending=False)
             for index, row in current_model_data.iterrows():
                 if curve_id < max_curves_per_model:
-                    print(curve_id)
-                    print('lower than')
                     plt.subplot(2,2,model_idx+1)
                     plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row['AUC']:.2f})', color=colors_plot[0])
                     plt.plot([0, 1], [0, 1], color=colors_plot[1], lw=2, linestyle='--')

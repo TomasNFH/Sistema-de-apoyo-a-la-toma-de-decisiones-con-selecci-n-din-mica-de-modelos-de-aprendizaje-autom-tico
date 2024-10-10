@@ -32,18 +32,14 @@ def model_dashboard(model_name, N_classes=2):
  
     return model
 
+#function to cast data before cleaning
 def d_cast(DATA, TARGET_COLUMN):
     ROSSETA = {}
     print(DATA.head())
 
-    # #cast prediction column ONLY (COULD ADD A CONTINOUS CONDITION TO ENTER)
-    # DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
     for column in DATA:  
-
         # a flag to tell when to write
         cast_flag = False
-        print(column)
-        
         #if there is only one unique, we save the KEY and drop the column
         if len(DATA[column].unique()) == 1:
             print(10)
@@ -52,40 +48,23 @@ def d_cast(DATA, TARGET_COLUMN):
             id_unique = 0
             DATA = DATA.drop(column, axis=1)
             a,b = -99, -99
-
         else: #if we drop we cant acces the colum type 
             column_type = DATA[column].dtype
-            print(column_type)
-            #if the column contain string we cast it to int
-            if column_type == 'bool':
-                print(25)
-                cast_flag = True
-
-
-                
-                DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
-                
-        
-                uniqueVAL = np.array(['False', 'True']) 
-
-                #q pasa con regresión lineal de strings? No tiene sentido (a,b=-1)
-                a = -1
-                b = -1            
             #if the column contain string we cast it to int
             if column_type == 'object':
-                print(20)
                 cast_flag = True
                 DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
-                # model = linear_model.LinearRegression()
-                a = -1
-                b = -1
-                
+                a,b = -99, -99
+            #if the column contain string we cast it to int
+            if column_type == 'bool' or len(DATA[column].unique())==2:
+                cast_flag = True
+                DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
+                uniqueVAL = np.array(['False', 'True']) 
+                a,b = -99, -99          
             else:
                 if column == TARGET_COLUMN:
-                    print(30)
                     cast_flag = True
                     DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
-
                     model = linear_model.LinearRegression()
                     model.fit(uniqueVAL.reshape(-1, 1), id_unique.reshape(-1, 1))
                     a = model.coef_      
@@ -93,14 +72,11 @@ def d_cast(DATA, TARGET_COLUMN):
         if cast_flag:
             current_column= {column : [uniqueVAL, id_unique, a, b]} 
             ROSSETA.update(current_column)
-
     return DATA, ROSSETA
 
 
 def de_cast_PREDICTION(casted_data, columns, rosseta):
-
-
-    decasted_data = casted_data
+    decasted_data = casted_data.copy()
     for idx_column, column in enumerate(columns):
         #case we need to decast
         if column in rosseta.keys():
