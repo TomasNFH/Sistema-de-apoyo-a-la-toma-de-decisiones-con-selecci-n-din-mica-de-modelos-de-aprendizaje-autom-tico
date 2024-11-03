@@ -13,26 +13,26 @@ def dyn_model_selection(file_selected=-1, column_selected=-1):
     
         ### Step 1: Data acquisition ###
     data = Dacquisition.d_acquisition(file_selected)
-    # breakpoint()
     data, target_column, target_type, scewed_target_col = Dacquisition.var_acquisition(data, column_selected, CHECK=True) #tema de dataNaN y dataCLEAN juntar
-                                                                    #tipo requirements que se hacen en el main antes de entrar a SYSTEM
-    #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
-    data = auxiliary_fun.d_cast(data, target_column, target_type)
 
-        ### Step 3.1: Exploratory Data Analyzis (MANUAL)###
+        ### Step 2: Data cast ###  
+    data, rosseta = auxiliary_fun.d_cast(data, target_column)
+
+        ### Step 3: Data Cleaning ###    
+    #min_porcentage_col if missing>10 for a column, we drop it
+    data, drop_col, drop_row = DprepNcleaning.data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0)
+    print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
+
+        ### Step 4: Exploratory Data Analyzis (MANUAL)###
     manualEDA, missing4rows = eda.ManualEDAfun(data) #data no tiene a predicted column
     print(colored('\nTable with information of the variables:', 'red', attrs=['bold']))
     print(colored(manualEDA, 'red'))
     print(colored('\nTable with information of the rows:', 'red', attrs=['bold']))
     print(colored(missing4rows, 'red'))
     
-        ### Step 2: Data Cleaning ###    
-    #min_porcentage_col if missing>10 for a column, we drop it
-    data, drop_col, drop_row = DprepNcleaning.data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0)
-    print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
-
-        ### Step 3.2: Exploratory Data Analyzis (AUTO)###
-    dtale.show(data) #hacerle decast !!!!!
+        ### Step 4.2: Exploratory Data Analyzis (AUTO)###
+    data_decasted_aux = auxiliary_fun.de_cast_PREDICTION(data, data.columns, rosseta)  
+    dtale.show(data_decasted_aux) #hacerle decast !!!!!
     dtale.show(open_browser=True)
 
         ### Step 5: Model Building       

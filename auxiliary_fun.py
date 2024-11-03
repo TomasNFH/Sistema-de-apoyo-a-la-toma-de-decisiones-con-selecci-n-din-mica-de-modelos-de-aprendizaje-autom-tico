@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestRegressor
-from sklearn import linear_model, svm
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn import linear_model, svm #?
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 # from sklearn import svm/
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -10,6 +11,9 @@ from sklearn.metrics import classification_report
 from sklearn import metrics
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay 
 import matplotlib.pyplot as plt
+# from sklearn import  ensemble
+from lifelines import KaplanMeierFitter
+
 
 
 def model_dashboard(model_name, N_classes=2):
@@ -27,9 +31,28 @@ def model_dashboard(model_name, N_classes=2):
         model = linear_model.LogisticRegression(max_iter=1000) 
     if model_name=='KNeighborsClassifier':
         model = KNeighborsClassifier()
-    if model_name=='SupportVectorMachines':
+    if model_name=='KNeighborsRegressor':
+        model = KNeighborsRegressor()
+    if model_name=='SupportVectorMachines': #y esto?
         model = svm.SVC()
- 
+    if model_name=='SupportVectorClassification(LINEAL_K)':
+        model = SVC(probability=True)
+    if model_name=='GradientBoostingRegressor':
+        params = {
+            "n_estimators": 500,
+            "max_depth": 4,
+            "min_samples_split": 5,
+            "learning_rate": 0.01,
+            "loss": "squared_error",
+        }
+        model = GradientBoostingRegressor(**params)
+    if model_name=='PassiveAggressiveRegressor':
+        model = linear_model.PassiveAggressiveRegressor()
+    if model_name=='LassoLars':
+        model = linear_model.LassoLars()
+    #VER BIEN COMO IMPLEMENTAR
+    if model_name=='CoxRegression': 
+        model = KaplanMeierFitter()
     return model
 
 #function to cast data before cleaning
@@ -59,7 +82,8 @@ def d_cast(DATA, TARGET_COLUMN):
             if column_type == 'bool' or len(DATA[column].unique())==2:
                 cast_flag = True
                 DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
-                uniqueVAL = np.array(['False', 'True']) 
+                # uniqueVAL = np.array(['False', 'True']) 
+                uniqueVAL = np.array([False, True]) 
                 a,b = -99, -99          
             else:
                 if column == TARGET_COLUMN:

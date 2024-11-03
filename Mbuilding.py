@@ -4,15 +4,21 @@ import pandas as pd
 import DprepNcleaning
 from sklearn.model_selection import train_test_split
 import auxiliary_fun
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay 
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, brier_score_loss
 from termcolor import colored
 import matplotlib.pyplot as plt 
 import seaborn as sns
 from sklearn.utils import resample
+# import time
+
+from alive_progress import alive_bar
 import time
 
 
 def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
+
+    PROGRESS_BAR = True
+
     start_time = time.time()
     colors_plot = ['#309284', '#337AEF']
     fig_ROC = 0
@@ -22,30 +28,39 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                                            'Normalization method', 'Feature selection method', 
                                            'Features used', 'Number of splits', 'Cross-validation ID', 
                                            'Confusion matrix', 'True Positive Rate', 'False Positive Rate', 'Recall', 
-                                           'F1 score', 'AUC', 'Score'])
+                                           'F1 score', 'AUC', 'Score', 'Brier score loss'])
     NORM_FLAGS = np.array([0,1,2])
     FEATURE_FLAGS = np.array([0,1,2]) #dont use 2 due to time
     if Fast:
         FEATURE_FLAGS = np.array([0,1])
 
     if TARGET_TY == 'boolean':
-        model_stack = ['RandomForestClassifier', 'LogisticRegression', 'KNeighborsClassifier', 'SupportVectorMachines']
+        model_stack = ['RandomForestClassifier', 'LogisticRegression', 'KNeighborsClassifier', 'SupportVectorClassification(LINEAL_K)']
         NORM_FLAGS = np.array([0])
     if TARGET_TY == 'classes':
-        model_stack = ['RandomForestClassifier', 'KNeighborsClassifier', 'SupportVectorMachines']   
+        model_stack = ['RandomForestClassifier', 'KNeighborsClassifier', 'SupportVectorClassification(LINEAL_K)']   
         NORM_FLAGS = np.array([0])
     if TARGET_TY == 'continuous':
         # model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor'] 
-        model_stack = ['LinearRegression', 'RandomForestRegressor','QuantileRegressor'] 
+        model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
+    
 
     Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
     Normalization_methods = ['No', 'Min-Max', 'Z-score']
     
+    number_of_splits = 5
+    operation_counter = 0
+    number_operations = len(FEATURE_FLAGS)*(number_of_splits)*len(model_stack)*len(NORM_FLAGS)
+
     ### Step 1: Feature Engeeniring ###
     IMPORTANCES_OUT = []
     CURRENT_FEATURES_OUT = []
     ALL_TRAINED_MODELS = []
+
+    # print(len(NORM_FLAGS))
+    # print(number_of_splits)
     for F_FLAG in FEATURE_FLAGS:
+
         X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
         y = DATA[TARGET_COLUMN]
         X, current_Features, importances = Fselection.F_selector(X, y, N_features=FEATURE_N, FLAG=F_FLAG) #PQ MANDO Y TAMBIEN?
@@ -74,7 +89,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         # X = X[0:34:,:]
         # y = y[0:34] 
 
-        number_of_splits = 5  
+          
         samples_of_test = int(len(X)/number_of_splits)
         for shift_idx in range(number_of_splits): 
             # breakpoint()
@@ -85,12 +100,22 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
             # breakpoint()
             ### Step 3: Model selection ###
             for model_name in model_stack:
-                # if model_name == 'SupportVectorMachines': #LR dont work with norm 2 (boolean)
-                #     NORM_FLAGS = np.array([0]) 
+                print('Model name is '+model_name)
 
                 ### Step 4: NORMALIZATION ###
-                for N_FLAG in NORM_FLAGS:              
+                for N_FLAG in NORM_FLAGS: 
+                    # print(N_FLAG) 
+                    operation_counter = operation_counter+1
+                    if PROGRESS_BAR:
+                        print('Progresion in training: '+str( round((operation_counter/number_operations)*100) )+'%, the time is: ', end='')  
+                        end_time = time.time()
+                        total_seconds = end_time-start_time
+                        minutes = int(total_seconds // 60)
+                        seconds = int(total_seconds % 60)
+                        print('{minutes}:{seconds}'.format(minutes=minutes, seconds=seconds)+' minutes.')
+
                     ### Step 5: Model Building 
+                    # breakpoint()
                     model = auxiliary_fun.model_dashboard(model_name)
                     model.fit(X_train, y_train)
                     # breakpoint()
@@ -106,6 +131,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                     Recall = np.nan
                     F1 = np.nan
                     CoMtx = np.nan
+                    brier_score = np.nan
 
                     if TARGET_TY == 'boolean' or TARGET_TY == 'classes':
                         classes_of_target = np.unique(y)
@@ -126,10 +152,16 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                             tpr = metrics_result['roc_curve'][1]
                             fpr = metrics_result['roc_curve'][0]
                             auc = metrics_result['roc_curve'][2]
+
+                            ### brier score loss ###
+                            prediction_proba = model.predict_proba(X_test)
+                            prediction_proba_positive_clase = prediction_proba[:,1] 
+                            brier_score = brier_score_loss(y_test, prediction_proba_positive_clase)
+
                     model_return.loc[len(model_return.index)] = [TARGET_COLUMN, TARGET_TY, model_name, 
                                                                  Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features, 
                                                                  number_of_splits, shift_idx, CoMtx, 
-                                                                 tpr, fpr, Recall, F1, auc, model.score(X_test, y_test)] 
+                                                                 tpr, fpr, Recall, F1, auc, model.score(X_test, y_test), brier_score] 
     feature_data = pd.DataFrame([]) 
     Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
     for idx in range(len(IMPORTANCES_OUT)):
@@ -201,7 +233,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
     if TARGET_TY == 'boolean':
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
-        print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'True Positive Rate', 'False Positive Rate', 'Recall', 'F1 score', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
+        print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'True Positive Rate', 'False Positive Rate', 'Recall', 'F1 score', 'Score', 'Brier score loss']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
 
         print(colored('\nThe results for the best model (based in Score):', 'green', attrs=['bold']))
         MAX_idx = model_return['Score'].idxmax()
@@ -265,7 +297,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
     if TARGET_TY == 'classes':
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
-        print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'True Positive Rate', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
+        print(colored(model_return[['Target column', 'Taget type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
 
         print(colored('\nThe results for the best model (based in Score):', 'green', attrs=['bold']))
         MAX_idx = model_return['Score'].idxmax()

@@ -12,12 +12,13 @@ def d_acquisition(FILE_SELECTED = -1):
 
     files = []
     names = [] #just the name to print
-    for dirname, _, filenames in os.walk(r'C:\Users\tomas\Pasantia\Input'):
+    # for dirname, _, filenames in os.walk(r'C:\Users\tomas\Pasantia\Input'):
+    for dirname, _, filenames in os.walk(r'C:\Users\tomas\TESISS\input'):
         for filename in filenames:
             files.append(os.path.join(dirname, filename))    
             names.append(filename) 
 
-    # Digit implementation
+    # # Digit implementation
     # if FILE_SELECTED == -1: #if ==-1 ask for the idx
     #     print(colored('The possible files to load are: \n', 'black', attrs=['bold']))
 
@@ -27,12 +28,13 @@ def d_acquisition(FILE_SELECTED = -1):
     # print('File selected is: '+str(files[FILE_SELECTED]))
     
     # Menu implementation
-    print(colored('The possible files to load are: \n', 'green', attrs=['bold']))
-    captions = []
-    name = names[cutie.select(names, caption_indices=captions, selected_index=0)]
-    res_list = [i for i, value in enumerate(names) if value == name]
-    print(int(res_list[0]))
-    FILE_SELECTED = int(res_list[0])
+    if FILE_SELECTED == -1:
+        print(colored('The possible files to load are: \n', 'green', attrs=['bold']))
+        captions = []
+        name = names[cutie.select(names, caption_indices=captions, selected_index=0)]
+        res_list = [i for i, value in enumerate(names) if value == name]
+        print(int(res_list[0]))
+        FILE_SELECTED = int(res_list[0])
     
     # data type verification
     if files[FILE_SELECTED][len(files[FILE_SELECTED])-5:] == '.xlsx':
@@ -135,6 +137,7 @@ def var_acquisition(DATA, COLUMN_SELECTED_IDX=-1, CHECK=True):
 
         # Menu implementation
         type_check = cutie.prompt_yes_or_no("Is this the type you want?")
+        
         if type_check != 1:
             if TARGET_TYPE == 'continuous':
 
