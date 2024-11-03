@@ -353,7 +353,6 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     DATA_cleaned_decasted = auxiliary_fun.de_cast_PREDICTION(DATA_cleaned, DATA_cleaned.columns, rosseta)  
                     gr.DataFrame(DATA, interactive='False')
                     gr.DataFrame(DATA_cleaned_decasted, interactive='False')
-                    breakpoint()
                     ### Step 3.2: Exploratory Data Analyzis (AUTO)###
                     # dtale.show(DATA_cleaned) 
                     # dtale.show(open_browser=True)
@@ -373,9 +372,6 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                 if MODEL_RESULT>0:
 
                         ### Step 5: Model Building       
-                    print(DATA_cleaned)
-                    print(TARGET_COLUMN)
-                    print(TARGET_TYPE)
                     global model_list
                     global model_info
                     model_info, model_list, figure_features, fig_ROC, disp = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE, Fast = True)                    
@@ -446,6 +442,11 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     prediction_example = selected_model.predict(training_example.to_numpy())
                     prediction_example = pd.DataFrame(prediction_example, columns=['Prediction'])
 
+                    #real value ###robablemente tenga q descastear esto tambien , mejor usar DATA_cleaned_decasted
+                    real_val =  DATA_cleaned[TARGET_COLUMN].reset_index()
+                    real_val = real_val.drop("index", axis='columns')
+                    real_val = real_val.rename(columns={TARGET_COLUMN:'Real value'})
+
                     #DeCast training data and prediction
                     training_example = auxiliary_fun.de_cast_PREDICTION(training_example, feature_used, rosseta)
                     prediction_example = auxiliary_fun.de_cast_PREDICTION(prediction_example, [TARGET_COLUMN], rosseta)
@@ -454,12 +455,14 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     for unique_prediction in prediction_example['Prediction'].unique():
                         aux_indexes = prediction_example[prediction_example['Prediction']==unique_prediction].index
                         indexes_unique.append(aux_indexes[0])
-                    breakpoint()
                     with gr.Row():
-                        # gr.DataFrame(training_example[training_example.columns[::-1]]  , label="Example of inputs:", scale=5, interactive='False')
-                        # gr.DataFrame(prediction_example, label="Prediction:", scale=1, interactive='False')
-                        gr.DataFrame(training_example[training_example.columns[::-1]].loc[indexes_unique].head(5) , label="Example of inputs:", scale=5, interactive='False')
-                        gr.DataFrame(prediction_example.loc[indexes_unique].head(5) , label="Prediction:", scale=1, interactive='False')
+                        breakpoint()
+                        aux_df = pd.concat([training_example[training_example.columns[::-1]].loc[indexes_unique].head(5),prediction_example.loc[indexes_unique].head(5)],axis=1) 
+                        aux_df2 = pd.concat([aux_df,real_val.loc[indexes_unique].head(5)],axis=1)
+
+                        # gr.DataFrame(training_example[training_example.columns[::-1]].loc[indexes_unique].head(5) , label="Example of inputs:", scale=5, interactive='False')
+                        # gr.DataFrame(prediction_example.loc[indexes_unique].head(5) , label="Prediction:", scale=1, interactive='False')
+                        gr.DataFrame(aux_df2, label="Example of inputs:", scale=5, interactive='False')
 
 
                     gr.Interface(
