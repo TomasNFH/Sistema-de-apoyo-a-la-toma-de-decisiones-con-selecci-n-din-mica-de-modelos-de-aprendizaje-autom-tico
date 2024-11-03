@@ -58,14 +58,12 @@ def model_dashboard(model_name, N_classes=2):
 #function to cast data before cleaning
 def d_cast(DATA, TARGET_COLUMN):
     ROSSETA = {}
-    print(DATA.head())
 
     for column in DATA:  
         # a flag to tell when to write
         cast_flag = False
         #if there is only one unique, we save the KEY and drop the column
         if len(DATA[column].unique()) == 1:
-            print(10)
             cast_flag = True
             uniqueVAL = DATA[column][0] #preparar para recuperar para el final del modelado (guardar en un df)
             id_unique = 0
@@ -130,13 +128,12 @@ def de_cast_PREDICTION(casted_data, columns, rosseta):
                         t_hat = (y_hat-y_1)/(y_2-y_1)
                         x_hat = x_2*t_hat + x_1*(1-t_hat) 
 
-                    # prediction_decasted[idx] = x_hat
                     decasted_data.iloc[idx_row,idx_column] = x_hat
 
     return decasted_data
 
 
-#not nly used for predictions
+#not only used for predictions
 def de_cast_PREDICTION_print(casted_data, columns, rosseta):
 
     decasted_data = casted_data
@@ -179,18 +176,12 @@ def de_cast_PREDICTION_print(casted_data, columns, rosseta):
 #usarlo para castear las entradas
 def cast_input(data_input, rosseta):
 
-
     columns = data_input.columns
-
-    # casted_input = np.ones(len(data_input))*-1
     casted_input = data_input
-
     idx_row = 0
     for idx_column, column in enumerate(columns):
 
         current_value = data_input.iloc[idx_row, idx_column]
-        print(column)
-        print(current_value)
         
         #verify if is needed to cast <if column is in rosseta.keys()>
         if column in rosseta.keys():
@@ -205,7 +196,7 @@ def cast_input(data_input, rosseta):
                 idx_cast = np.where(uniqueVAL == current_value) 
                 casted_input.iloc[idx_row, idx_column] = id_unique[idx_cast[0][0]] 
             else:
-                print('no existe en la id')
+                print('no existe en la id (cast input)')
 
     return casted_input
 
@@ -214,21 +205,10 @@ def unique_to_int(data_in, column_name):
     dataF = pd.DataFrame(data_in, columns=data_in.columns)
     uniqueVAL = dataF[column_name].unique()
     id_unique = np.arange(len(uniqueVAL))
-
-
-    # print('\n column name')
-    # print(column_name)
-    # print(uniqueVAL)
-
-    # np.isnan(uniqueVAL, casting=)
     uniqueVAL1 = uniqueVAL[~pd.isnull(uniqueVAL)] #drop uniques nan
     uniqueVAL1 = np.sort(uniqueVAL1)
-    # if column_name == 'ZB1SOCUP1':
-
 
     for idU, val in enumerate(uniqueVAL1):
-
-
 
         dataF[column_name] = dataF[column_name].apply(lambda x: idU if x == val else x)
         # data_in[column_name] = data_in[column_name].apply(lambda x: idU if x == val else x)

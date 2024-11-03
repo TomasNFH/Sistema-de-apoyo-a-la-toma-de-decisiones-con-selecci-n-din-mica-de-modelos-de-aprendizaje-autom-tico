@@ -242,20 +242,25 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     #if we dont hace a scewed data -> WE SHOW THE RESULT <SAME AS LINE 173>
                     else: 
                         if TARGET_TYPE != 'Not identify': #take it depending if is boolean or classes
-                            if TARGET_TYPE == 'continuous': #print depending of target typr
+                            if TARGET_TYPE == 'continuous': #print depending of target type
                                 text_output_1 = '\nThe target column type is '
-                                text_output_2 = ', the elements are:'
+                                text_output_2 = ', the elements range is:'
+                                text_output_3 = '(x , x)'
                             else: #discrete case
                                 text_output_1 = '\nThe target column type is ' + 'discrete ('                                 
                                 text_output_2 = ')'+', the classes are:'
-                            text_output_3 = '\n'
-                            for unique_element in DATA[TARGET_COLUMN].unique(): 
-                                print(colored(str(unique_element)+' ', 'green', attrs=['bold']), end='')
-                                text_output_3 = text_output_3+str(unique_element)+' - '
-
-                        with gr.Column():
-                            gr.Label(text_output_1+TARGET_TYPE.upper()+text_output_2, show_label=False)
-                            gr.Label(text_output_3[:len(text_output_3)-3] , show_label=False)
+                                text_output_3 = '\n'
+                                for unique_element in DATA[TARGET_COLUMN].unique(): 
+                                    print(colored(str(unique_element)+' ', 'green', attrs=['bold']), end='')
+                                    text_output_3 = text_output_3+str(unique_element)+' - '
+                                text_output_3 = text_output_3[:len(text_output_3)-3]
+                        with gr.Row():
+                            with gr.Column():
+                                gr.Label(text_output_1+TARGET_TYPE.upper()+text_output_2, show_label=False)
+                                gr.Label(text_output_3, show_label=False)
+                            fig_target = plt.figure()
+                            sns.histplot(data=DATA[TARGET_COLUMN], kde=True, stat='percent')
+                            gr.Plot(fig_target, show_label=False, scale = 1)
 
                         #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                         global rosseta
@@ -289,9 +294,13 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         print(colored(str(unique_element)+' ', 'green', attrs=['bold']), end='')
                         text_output_3 = text_output_3+str(unique_element)+' - '
 
-                    with gr.Column():
-                        gr.Label(text_output_1+TARGET_TYPE.upper()+text_output_2, show_label=False)
-                        gr.Label(text_output_3[:len(text_output_3)-3] , show_label=False)
+                    with gr.Row():
+                        with gr.Column():
+                            gr.Label(text_output_1+TARGET_TYPE.upper()+text_output_2, show_label=False)
+                            gr.Label(text_output_3, show_label=False)
+                        fig_target = plt.figure()
+                        sns.histplot(data=DATA[TARGET_COLUMN], kde=True, stat='percent', discrete=True)
+                        gr.Plot(fig_target, show_label=False, scale = 1)
                         
                     #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                     global rosseta
@@ -332,7 +341,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     ### Step 3.2: Exploratory Data Analyzis (AUTO)###
                     dtale.show(DATA) 
                     dtale.show(open_browser=True)
-                    dtale.show()
+                    # dtale.show()
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
@@ -361,14 +370,14 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     gr.DataFrame(DATA, interactive='False')
                     gr.DataFrame(DATA_cleaned_decasted, interactive='False')
                     ### Step 3.2: Exploratory Data Analyzis (AUTO)###
-                    # dtale.show(DATA_cleaned) 
+                    # dtale.show(DATA_cleaned_decasted) 
                     # dtale.show(open_browser=True)
                     # dtale.show()
 
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
-        with gr.Tab(label="Dynamic models"):
+        with gr.Tab(label="Automated machine learning"):
 
             MODEL_RESULT_RFLAG = gr.State(0)
             calculate_button = gr.Button("Start model shake")
@@ -382,7 +391,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     global model_list
                     global model_info
                     model_info, model_list, figure_features, fig_ROC, disp = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE, Fast = True)                    
-                    gr.DataFrame(model_info, label="Table with information of scores of the models:", scale=1, interactive='False')
+                    gr.DataFrame(model_info.drop(['Target column', 'Target type'], axis=1).dropna(axis='columns'), label="Table with information of the trained models:", scale=1, interactive='False')
 
                     with gr.Row():
                         gr.Plot(figure_features, show_label=False, scale = 1)
@@ -424,8 +433,6 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     model_selection_list = []
                     idx_model_sl_lst = []
                     for row in sorted_models.iterrows():
-                        # aux = str(row[1]['Model name'])+': <AUC: '+str(round(row[1]['AUC'],3))+', Score:' 
-                        # aux2 = aux + str(round(row[1]['Score'],3)) + ', F1 score:'+str(round(row[1]['F1 score'],3)) + ', Brier score loss:'+str(round(row[1]['Brier Score loss'],3))+'>'
                         model_atributes = ''
                         for idx, column in enumerate(row[1]):
                             model_atributes = model_atributes+row[1].axes[0][idx]+': '+str(column)+', '
@@ -433,11 +440,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         model_atributes = model_atributes[:len(model_atributes)-2] 
                         model_selection_list.append(model_atributes)
                         idx_model_sl_lst.append(row[0])
-                    
-                    # breakpoint()
-
                     column_dropdown = gr.Dropdown(choices=model_selection_list, filterable=False)
-
                     # Set the function to be called when the dropdown value changes
                     column_dropdown.input(fn=get_column_model, inputs=column_dropdown, outputs=None, scroll_to_output=True)
                     column_dropdown.input(lambda count: count + 1, dropdown_Mpredictor_RFLAG, dropdown_Mpredictor_RFLAG, scroll_to_output=True)
@@ -475,33 +478,17 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         aux_indexes = prediction_example[prediction_example['Prediction']==unique_prediction].index
                         indexes_unique.append(aux_indexes[0])
                     with gr.Row():
-                        # breakpoint()
-                        # aux_df = pd.concat([training_example[training_example.columns[::-1]].loc[indexes_unique].head(5),prediction_example.loc[indexes_unique].head(5)],axis=1) 
-                        # aux_df2 = pd.concat([aux_df,real_val.loc[indexes_unique].head(5)],axis=1)
                         prediction_example_DF = pd.concat([training_example[training_example.columns[::-1]].loc[indexes_unique].head(5), real_val.loc[indexes_unique].head(5),prediction_example.loc[indexes_unique].head(5)],axis=1)
                         if TARGET_TYPE == 'boolean' or TARGET_TYPE == 'classes':
                             class_pred_proba = []
                             count = 0
                             for idx in prediction_example_casted.loc[indexes_unique].astype(int).iterrows():
-                                # auxiliar = prediction_example_proba[indexes_unique][0][idx[1]['Prediction']]
-                                # auxiliar = prediction_example_proba[indexes_unique[count]][idx[1]['Prediction']]
-
                                 class_pred_proba.append(round(prediction_example_proba[indexes_unique[count]][idx[1]['Prediction']],2))
                                 count = count+1
-                            # prediction_example_proba[indexes_unique][0][indexes_pred_proba] 
-                            # breakpoint()
-                            # pep_data = {'Probability':class_pred_proba}
+
                             pep_DF = pd.DataFrame({'Probability':class_pred_proba}) 
-                            # breakpoint()
-                            # if TARGET_TYPE == 'boolean':
-                                # breakpoint()
-                                # aux_df2 = pd.concat([aux_df,real_val.loc[indexes_unique].astype(bool).head(5)],axis=1)
-                                # breakpoint()
                             prediction_example_DF = pd.concat([prediction_example_DF.reset_index(drop=True),pep_DF.head(5)],axis=1) 
 
-
-                        # gr.DataFrame(training_example[training_example.columns[::-1]].loc[indexes_unique].head(5) , label="Example of inputs:", scale=5, interactive='False')
-                        # gr.DataFrame(prediction_example.loc[indexes_unique].head(5) , label="Prediction:", scale=1, interactive='False')
                         gr.DataFrame(prediction_example_DF, label="Example of inputs:", scale=5, interactive='False')
 
                     
