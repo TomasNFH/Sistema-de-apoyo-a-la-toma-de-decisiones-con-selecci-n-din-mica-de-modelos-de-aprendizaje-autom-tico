@@ -245,7 +245,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                             if TARGET_TYPE == 'continuous': #print depending of target type
                                 text_output_1 = '\nThe target column type is '
                                 text_output_2 = ', the elements range is:'
-                                text_output_3 = '(x , x)'
+                                text_output_3 = '('+str(DATA[TARGET_COLUMN].min())+', '+str(DATA[TARGET_COLUMN].max())+')'
                             else: #discrete case
                                 text_output_1 = '\nThe target column type is ' + 'discrete ('                                 
                                 text_output_2 = ')'+', the classes are:'
@@ -260,6 +260,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                                 gr.Label(text_output_3, show_label=False)
                             fig_target = plt.figure()
                             sns.histplot(data=DATA[TARGET_COLUMN], kde=True, stat='percent')
+                            plt.title('Histogram of distribution of target variable')
                             gr.Plot(fig_target, show_label=False, scale = 1)
 
                         #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)

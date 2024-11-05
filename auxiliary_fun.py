@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+# from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn import linear_model, svm #?
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 # from sklearn import svm/
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 from sklearn import metrics
@@ -13,6 +13,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 # from sklearn import  ensemble
 from lifelines import KaplanMeierFitter
+from sklearn.naive_bayes import GaussianNB
 
 
 
@@ -35,7 +36,7 @@ def model_dashboard(model_name, N_classes=2):
         model = KNeighborsRegressor()
     if model_name=='SupportVectorMachines': #y esto?
         model = svm.SVC()
-    if model_name=='SupportVectorClassification(LINEAL_K)':
+    if model_name=='SupportVectorClassification':
         model = SVC(probability=True)
     if model_name=='GradientBoostingRegressor':
         params = {
@@ -46,6 +47,15 @@ def model_dashboard(model_name, N_classes=2):
             "loss": "squared_error",
         }
         model = GradientBoostingRegressor(**params)
+    if model_name=='GradientBoostingClassifier':
+        # params = {
+        #     "n_estimators": 500,
+        #     "max_depth": 4,
+        #     "min_samples_split": 5,
+        #     "learning_rate": 0.01,
+        #     "loss": "squared_error",
+        # }
+        model = GradientBoostingClassifier()
     if model_name=='PassiveAggressiveRegressor':
         model = linear_model.PassiveAggressiveRegressor()
     if model_name=='LassoLars':
@@ -53,6 +63,8 @@ def model_dashboard(model_name, N_classes=2):
     #VER BIEN COMO IMPLEMENTAR
     if model_name=='CoxRegression': 
         model = KaplanMeierFitter()
+    if model_name=='GaussianNB': 
+        model = GaussianNB()
     return model
 
 #function to cast data before cleaning
@@ -60,6 +72,7 @@ def d_cast(DATA, TARGET_COLUMN):
     ROSSETA = {}
 
     for column in DATA:  
+        print('current column '+str(column))
         # a flag to tell when to write
         cast_flag = False
         #if there is only one unique, we save the KEY and drop the column

@@ -33,10 +33,10 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         FEATURE_FLAGS = np.array([0,1])
 
     if TARGET_TY == 'boolean':
-        model_stack = ['RandomForestClassifier', 'LogisticRegression', 'KNeighborsClassifier', 'SupportVectorClassification(LINEAL_K)']
+        model_stack = ['RandomForestClassifier', 'LogisticRegression', 'KNeighborsClassifier', 'SupportVectorClassification', 'GradientBoostingClassifier', 'GaussianNB']
         NORM_FLAGS = np.array([0])
     if TARGET_TY == 'classes':
-        model_stack = ['RandomForestClassifier', 'KNeighborsClassifier', 'SupportVectorClassification(LINEAL_K)']   
+        model_stack = ['RandomForestClassifier', 'KNeighborsClassifier', 'SupportVectorClassification']   
         NORM_FLAGS = np.array([0])
     if TARGET_TY == 'continuous':
         # model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor'] 
@@ -175,7 +175,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         best_model_res = model_return.iloc[MAX_idx]
 
         model_idx = 0
-        fig_CM, axes = plt.subplots(1, 4, sharey='row')
+        fig_CM, axes = plt.subplots(1, len(model_return['Model name'].unique()), sharey='row')
         max_curves_per_model = 1
         number_of_models = len(model_return['Model name'].unique())
         grouped_by_model = model_return.groupby('Model name')
@@ -211,7 +211,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
             current_model_data = current_model_data.sort_values(by=['AUC','Score','F1 score'], ascending=False)
             for index, row in current_model_data.iterrows():
                 if curve_id < max_curves_per_model:
-                    plt.subplot(2,2,model_idx+1)
+                    plt.subplot(2,3,model_idx+1)
                     plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row['AUC']:.2f})', color=colors_plot[0])
                     plt.plot([0, 1], [0, 1], color=colors_plot[1], lw=2, linestyle='--')
                     plt.xlim([0.0, 1.0])
