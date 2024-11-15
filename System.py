@@ -39,7 +39,7 @@ def dyn_model_selection(file_selected=-1, column_selected=-1, FAST = True):
     dtale.show(open_browser=True)
 
         ### Step 5: Model Building       
-    model_info, trained_models, fig1, fig2, fig3 = Mbuilding.model_shake(DATA=data, TARGET_COLUMN=target_column, TARGET_TY=target_type, Fast = FAST)
+    model_info, trained_models, fig1, fig2, fig3 = Mbuilding.model_shake(DATA=data, TARGET_COLUMN=target_column, TARGET_TY=target_type, Fast = True)
     sns.lmplot(
         data=model_info, x="Cross-validation ID", y="Score", row="Normalization method", col="Feature selection method", hue='Model name',
         palette="crest", ci=None,

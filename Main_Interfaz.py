@@ -391,7 +391,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         ### Step 5: Model Building       
                     global model_list
                     global model_info
-                    model_info, model_list, figure_features, fig_ROC, disp = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE, Fast = False)                    
+                    model_info, model_list, figure_features, fig_ROC, disp = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE, Fast = True)                    
                     gr.DataFrame(model_info.drop(['Target column', 'Target type'], axis=1).dropna(axis='columns'), label="Table with information of the trained models:", scale=1, interactive='False')
 
                     with gr.Row():
