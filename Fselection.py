@@ -12,32 +12,25 @@ def F_selector(X, y, N_features=5, FLAG=0):
 
     #split data into train and test
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=0)
-    if FLAG == 2: #N_features is only for FLAG == 0 and 2
-        breakpoint()
-        # Create an EFS object
-        # efs = EFS(estimator=LogisticRegression(),        # Use logistic regression as the classifier/estimator
-        #         min_features=1,      # The minimum number of features to consider is 1
-        #         max_features=4,      # The maximum number of features to consider is 4
-        #         scoring='accuracy',  # The metric to use to evaluate the classifier is accuracy 
-        #         cv=5)                
-        efs = EFS(
-            estimator=RandomForestClassifier(n_estimators=3, random_state=0), 
-            min_features=1,
-            max_features=N_features,
-            scoring='roc_auc',
-            print_progress=True,
-            cv=2
-        )
+    if FLAG == 2: 
+        if X.shape[1]>N_features: Mf = N_features
+        else: Mf = X.shape[1]
+
+        #Create an EFS object
+        efs = EFS(estimator=LogisticRegression(),        # Use logistic regression as the classifier/estimator
+                min_features=1,      # The minimum number of features to consider is 1
+                max_features=Mf,      # The maximum number of features to consider is 4
+                scoring='accuracy',  # The metric to use to evaluate the classifier is accuracy 
+                cv=5,print_progress=True)
+        # breakpoint()
         efs = efs.fit(X_train, y_train)
-        
-        features = list(efs.best_feature_names_)
+        breakpoint()
+        # efs.finalize_fit()
+
+        features = pd.Index(efs.best_feature_names_)
         X_reduced = X[features] 
         importancesRET = np.ones(len(features))*efs.best_score_ 
-        
-        # breakpoint()
-        # X_train_t = efs.transform(X_train)
-        # X_train_reduced = X_train[list(efs.best_feature_names_)]
-        # X_test_reduced = X_test[list(efs.best_feature_names_)]
+
     else:
         if FLAG == 0:
             model = RandomForestRegressor()
@@ -50,10 +43,11 @@ def F_selector(X, y, N_features=5, FLAG=0):
             importances = importances.to_numpy()
             importances = np.abs(importances)
         imp_sorted = np.sort(importances)
-        importancesRET = imp_sorted[len(importances)-N_features:]
+        if len(importances) <= N_features: importancesRET = imp_sorted
+        else: importancesRET = imp_sorted[len(importances)-N_features:]
         indexes = np.ones(0, dtype = int)
         #we run over the N_Features more importante and finde the index of each one
-        for importance in imp_sorted[len(importances)-N_features:]: 
+        for importance in importancesRET: 
             idx = np.where(importances == importance)[0][0]
             indexes = np.append(indexes, int(idx))
         features = X_test.columns[indexes] #select the column names by the indexes

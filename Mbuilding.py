@@ -39,9 +39,9 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         model_stack = ['RandomForestClassifier', 'KNeighborsClassifier', 'SupportVectorClassification']   
         NORM_FLAGS = np.array([0])
     if TARGET_TY == 'continuous':
-        # model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor'] 
+        # model_stack = ['LinearRegression', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
         model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
-    
+
 
     Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
     Normalization_methods = ['No', 'Min-Max', 'Z-score']
@@ -56,7 +56,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     ALL_TRAINED_MODELS = []
 
     for F_FLAG in FEATURE_FLAGS:
-
         X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
         y = DATA[TARGET_COLUMN]
         X, current_Features, importances = Fselection.F_selector(X, y, N_features=FEATURE_N, FLAG=F_FLAG) #PQ MANDO Y TAMBIEN?
@@ -98,6 +97,8 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
                     ### Step 5: Model Building 
                     model = auxiliary_fun.model_dashboard(model_name)
+                    # if F_FLAG==2:
+                        # breakpoint()
                     model.fit(X_train, y_train)
                     ALL_TRAINED_MODELS.append(model)
                     prediction = model.predict(X_test)
@@ -149,11 +150,12 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         aux.insert(0, 'Feature method', Feature_methods[idx]) 
         feature_data = pd.concat([feature_data,aux],ignore_index=True) 
   
-    fig_features, (ax1, ax2) = plt.subplots(2, 1)
+    
     if Fast == False:
         fig_features, (ax1, ax2, ax3) = plt.subplots(3, 1)
         ax3.bar(feature_data[feature_data['Feature method']==Feature_methods[2]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[2]]['Score'], color=colors_plot[0])
         ax3.set_ylim(0, 1)
+    else: fig_features, (ax1, ax2) = plt.subplots(2, 1)
 
     ax1.bar(feature_data[feature_data['Feature method']==Feature_methods[0]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[0]]['Score'], color=colors_plot[0])
     ax1.set_ylim(0, 1)
