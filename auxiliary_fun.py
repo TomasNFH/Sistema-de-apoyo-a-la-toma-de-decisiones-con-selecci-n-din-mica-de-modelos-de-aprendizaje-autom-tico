@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 # from sklearn import  ensemble
 from lifelines import KaplanMeierFitter
 from sklearn.naive_bayes import GaussianNB
+import time
+
 
 
 
@@ -70,13 +72,20 @@ def model_dashboard(model_name, N_classes=2):
 #function to cast data before cleaning
 def d_cast(DATA, TARGET_COLUMN):
     ROSSETA = {}
-
+    start_time = time.time()
     for column in DATA:  
+        end_time = time.time()
+        total_seconds = end_time-start_time
+        minutes = int(total_seconds // 60)
+        seconds = int(total_seconds % 60)
+        print('{minutes}:{seconds}'.format(minutes=minutes, seconds=seconds)+' minutes.')
+
         print('current column '+str(column))
         # a flag to tell when to write
         cast_flag = False
         #if there is only one unique, we save the KEY and drop the column
         if len(DATA[column].unique()) == 1:
+            print('drop column because there is only one value')
             cast_flag = True
             uniqueVAL = DATA[column][0] #preparar para recuperar para el final del modelado (guardar en un df)
             id_unique = 0
@@ -86,11 +95,13 @@ def d_cast(DATA, TARGET_COLUMN):
             column_type = DATA[column].dtype
             #if the column contain string we cast it to int
             if column_type == 'object':
+                print('Cast strings')
                 cast_flag = True
                 DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
                 a,b = -99, -99
             #if the column contain string we cast it to int
             if column_type == 'bool' or len(DATA[column].unique())==2:
+                print('cast boolean')
                 cast_flag = True
                 DATA, uniqueVAL, id_unique = unique_to_int(DATA, column) #guardar todo esto en un DF para recuperar
                 # uniqueVAL = np.array(['False', 'True']) 
@@ -98,6 +109,7 @@ def d_cast(DATA, TARGET_COLUMN):
                 a,b = -99, -99          
             else:
                 if column == TARGET_COLUMN:
+                    print('if we didnt cast already, we cast the target')
                     cast_flag = True
                     DATA, uniqueVAL, id_unique = unique_to_int(DATA, TARGET_COLUMN) #with perturbado it breaks
                     model = linear_model.LinearRegression()
@@ -220,17 +232,10 @@ def unique_to_int(data_in, column_name):
     id_unique = np.arange(len(uniqueVAL))
     uniqueVAL1 = uniqueVAL[~pd.isnull(uniqueVAL)] #drop uniques nan
     uniqueVAL1 = np.sort(uniqueVAL1)
-
-    for idU, val in enumerate(uniqueVAL1):
-
-        dataF[column_name] = dataF[column_name].apply(lambda x: idU if x == val else x)
-        # data_in[column_name] = data_in[column_name].apply(lambda x: idU if x == val else x)
-        #tengo un problema, ti convierto todos los 1 en 0 
-            #si tenia 0, ahora al reconvertirlos en 1 me queda 
-
-        #en general puedo tener el problema de castear valores que ya habia casteado
-            #tengo q asegurarme que los id_unique no tengan match con uniqueVAL
-
+    identifiers = id_unique.tolist()
+    original = uniqueVAL1.tolist()
+    variable_change = dict(zip(original,identifiers)) 
+    dataF.loc[:,[column_name]]=dataF.replace(variable_change)[column_name]
     return dataF, uniqueVAL1, id_unique
 
 

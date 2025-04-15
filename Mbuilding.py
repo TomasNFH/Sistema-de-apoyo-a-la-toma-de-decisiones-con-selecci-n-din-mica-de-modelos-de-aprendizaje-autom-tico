@@ -214,14 +214,14 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
             for index, row in current_model_data.iterrows():
                 if curve_id < max_curves_per_model:
                     plt.subplot(2,3,model_idx+1)
-                    plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row['AUC']:.2f})', color=colors_plot[0])
+                    plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row["AUC"]:.2f})', color=colors_plot[0])
                     plt.plot([0, 1], [0, 1], color=colors_plot[1], lw=2, linestyle='--')
                     plt.xlim([0.0, 1.0])
                     plt.ylim([0.0, 1.05])
                     plt.xlabel('False Positive R.')
                     if model_idx == 0:
                         plt.ylabel('True Positive Rate')
-                    plt.title(f'{row['Model name']}', rotation=0)
+                    plt.title(f'{row["Model name"]}', rotation=0)
                     plt.legend(loc="lower right")
                 curve_id = curve_id+1
             model_idx = model_idx+1

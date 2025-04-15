@@ -13,6 +13,7 @@ import DprepNcleaning
 import eda
 import Mbuilding
 import dtale
+import plotly.express as px
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -259,9 +260,11 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                                 gr.Label(text_output_1+TARGET_TYPE.upper()+text_output_2, show_label=False)
                                 gr.Label(text_output_3, show_label=False)
                             fig_target = plt.figure()
-                            sns.histplot(data=DATA[TARGET_COLUMN], kde=True, stat='percent')
-                            plt.title('Histogram of distribution of target variable')
+                            # sns.histplot(data=DATA[TARGET_COLUMN], kde=True, stat='percent')
+                            # plt.title('Histogram of distribution of target variable')
+                            px.bar(DATA, x=TARGET_COLUMN)
                             gr.Plot(fig_target, show_label=False, scale = 1)
+
 
                         #AUTO-CAST strings to int (if <unique == 1> we save the value as a key and drop the column for the model)
                         global rosseta
@@ -391,7 +394,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         ### Step 5: Model Building       
                     global model_list
                     global model_info
-                    model_info, model_list, figure_features, fig_ROC, disp = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE, Fast = True)                    
+                    model_info, model_list, figure_features, fig_ROC, disp = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE, Fast = False)                    
                     gr.DataFrame(model_info.drop(['Target column', 'Target type'], axis=1).dropna(axis='columns'), label="Table with information of the trained models:", scale=1, interactive='False')
 
                     with gr.Row():
