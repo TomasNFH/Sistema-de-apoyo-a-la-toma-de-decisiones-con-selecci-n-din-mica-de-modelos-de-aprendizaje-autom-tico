@@ -1,4 +1,4 @@
-import System as sy
+from System import Workflow
 
 #dynamic system modelation?
 ret = sy.dyn_model_selection(FAST = True, PLOT = True)
