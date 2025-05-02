@@ -1,7 +1,7 @@
-import Fselection
+from System.Modules import Fselection
 import numpy as np
 import pandas as pd
-import DprepNcleaning
+from System.Modules import DprepNcleaning
 from sklearn.model_selection import train_test_split
 import auxiliary_fun
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, brier_score_loss
