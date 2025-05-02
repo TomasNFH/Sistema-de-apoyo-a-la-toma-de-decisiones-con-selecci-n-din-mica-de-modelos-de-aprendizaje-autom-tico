@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-import auxiliary_fun
+from System.Auxiliary import auxiliary_fun
 import static_frame as sf
 from termcolor import colored
 import numpy as np
