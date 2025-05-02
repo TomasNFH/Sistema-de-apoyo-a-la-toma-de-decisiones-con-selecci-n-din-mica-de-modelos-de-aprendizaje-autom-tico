@@ -2,18 +2,19 @@ import gradio as gr
 import pandas as pd
 import cutie
 import os
-import auxiliary_fun
 import static_frame as sf
 from termcolor import colored
 import numpy as np
 import cutie
 import matplotlib.pyplot as plt
 import seaborn as sns
-import DprepNcleaning
-import eda
-import Mbuilding
 import dtale
 import plotly.express as px
+from System.Auxiliary import auxiliary_fun
+# from System.Modules import Dacquisition
+from System.Modules import DprepNcleaning
+from System.Modules import eda
+from System.Modules import Mbuilding
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
