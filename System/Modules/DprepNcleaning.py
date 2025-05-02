@@ -1,4 +1,4 @@
-import eda
+from System.Modules import eda
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from termcolor import colored
