@@ -1,8 +1,8 @@
-import auxiliary_fun
-import Dacquisition
-import DprepNcleaning
-import eda
-import Mbuilding
+from System.Auxiliary import auxiliary_fun
+from System.Modules import Dacquisition
+from System.Modules import DprepNcleaning
+from System.Modules import eda
+from System.Modules import Mbuilding
 import dtale
 from termcolor import colored
 import seaborn as sns
