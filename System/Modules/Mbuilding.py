@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from System.Modules import DprepNcleaning
 from sklearn.model_selection import train_test_split
-import auxiliary_fun
+from System.Auxiliary import auxiliary_fun
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, brier_score_loss
 from termcolor import colored
 import matplotlib.pyplot as plt 
