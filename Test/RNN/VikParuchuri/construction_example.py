@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 # Read in our data, and fill missing values
-data = pd.read_csv("zero_to_gpt-master/data/clean_weather.csv", index_col=0)
+data = pd.read_csv("clean_weather.csv", index_col=0)
 data = data.ffill()
 
 # Display a sequence of temperatures
@@ -89,6 +89,9 @@ print(xo_2)
 
 
 
+
+
+
 ##### Full Forward Pass
 
 np.random.seed(0)
@@ -139,7 +142,7 @@ for i in range(3):
 
 
 
-##### Full Forward Pass
+##### Full Backward Pass
     # the backward pass to update our model parameters. The main complication in the backward pass is that parameters impact both the current output and future outputs.
 
 
@@ -154,7 +157,49 @@ def mse_grad(actual, predicted):
 actuals = np.array([70, 62, 65])
 
 loss_grad = mse_grad(actuals, outputs)
-loss_grad
+print('loss_grad '+str(loss_grad))
 
+next_hidden = None
+
+o_weight_grad, o_bias_grad, h_weight_grad, h_bias_grad, i_weight_grad = [0] * 5
+
+for i in range(2, -1, -1): #we start from the last neural network and go back to the first one (2 -> 1 -> 0)
+    l_grad = loss_grad[i].reshape(1,1)
+
+    o_weight_grad += hiddens[i][:,np.newaxis] @ l_grad          # XH(t_i)^T @ OG <adjust output weight (OW)>
+    o_bias_grad += np.mean(l_grad)
+
+    o_grad = l_grad @ o_weight.T            # OG @ WO^T = HOG
+
+    # Only add in the hidden gradient if a next sequence exists
+    if next_hidden is not None: 
+        h_grad = o_grad + next_hidden @ h_weight.T # HOG + HHG
+    else:
+        h_grad = o_grad # if we are in the last neural network
+
+    tanh_deriv = 1 - hiddens[i,:][np.newaxis,:] ** 2     #(inverse function of tanh, using derivative property)
+    h_grad = np.multiply(h_grad, tanh_deriv)     # = HG
+
+    next_hidden = h_grad
+
+    # Don't update the hidden weights for the first sequence position
+    if i > 0:
+        h_weight_grad += hiddens[i-1,:][:,np.newaxis] @ h_grad
+        h_bias_grad += np.mean(h_grad)
+
+    i_weight_grad += sequence[i].reshape(1,1).T @ h_grad
+
+
+
+lr = 1e-6
+# We'll divide the learning rate by the sequence length, since we were adding together the gradients
+# This makes training the model more stable
+lr = lr / 3
+
+i_weight -= i_weight_grad * lr
+h_weight -= h_weight_grad * lr
+h_bias -= h_bias_grad * lr
+o_weight -= o_weight_grad * lr
+o_bias -= o_bias_grad * lr
 
 breakpoint()
