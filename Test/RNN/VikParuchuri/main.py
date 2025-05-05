@@ -5,8 +5,12 @@ import pandas as pd
 import numpy as np
 
 breakpoint()
+
+os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir)) #go back to Test folder
+os.chdir(os.path.normpath(os.getcwd() + os.sep + os.pardir)) ##go back to main folder
+
 # Read in our data, and fill missing values by repeting last entry
-data = pd.read_csv("clean_weather.csv", index_col=0)
+data = pd.read_csv("Data_Input/clean_weather.csv", index_col=0)
 data = data.ffill()
 
 # Define predictors and target
