@@ -13,7 +13,7 @@ def d_acquisition(FILE_SELECTED = -1):
     files = []
     names = [] #just the name to print
     # for dirname, _, filenames in os.walk(r'C:\Users\tomas\Pasantia\Input'):
-    for dirname, _, filenames in os.walk('/home/tomas/TESIS/input'):
+    for dirname, _, filenames in os.walk('Data_Input'):
         for filename in filenames:
             files.append(os.path.join(dirname, filename))    
             names.append(filename) 

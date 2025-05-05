@@ -4,11 +4,10 @@ import functions as fn
 import pandas as pd
 import numpy as np
 
-# Read in our data, and fill missing values
+breakpoint()
+# Read in our data, and fill missing values by repeting last entry
 data = pd.read_csv("clean_weather.csv", index_col=0)
 data = data.ffill()
-
-breakpoint()
 
 # Define predictors and target
 PREDICTORS = ["tmax", "tmin", "rain"]
@@ -26,20 +25,15 @@ split_data = np.split(data, [int(.7*len(data)), int(.85*len(data))])
 
 
 
+
 breakpoint()
+        ####    TRAINING LOOP   ####
 
-
-
-
-
-
-
-
-
-
+#an epoch in the training loop refers to one complete pass through the entire training dataset
 epochs = 250
 lr = 1e-5
 
+# we take out four features, generate 4 input features. And output a single feature.
 layer_conf = [
     {"type":"input", "units": 3},
     {"type": "rnn", "hidden": 4, "output": 1}
@@ -47,8 +41,8 @@ layer_conf = [
 layers = fn.init_params(layer_conf)
 
 for epoch in range(epochs):
-    sequence_len = 7
-    epoch_loss = 0
+    sequence_len = 7 #how long of a sequence we want to feed into our rnn
+    epoch_loss = 0 #track the loss epoch by epoch
     for j in range(train_x.shape[0] - sequence_len):
         seq_x = train_x[j:(j+sequence_len),]
         seq_y = train_y[j:(j+sequence_len),]

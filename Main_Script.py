@@ -1,7 +1,7 @@
 from System import Workflow
 
 #dynamic system modelation?
-ret = sy.dyn_model_selection(FAST = True, PLOT = True)
+ret = Workflow.dyn_model_selection(FAST = True, PLOT = True)
 
                     # plt.figure(figsize=(8, 6))
                     # plt.plot(metrics_result['roc_curve'][0], metrics_result['roc_curve'][1], color='darkorange', lw=2, label=f'ROC curve (AUC = {metrics_result["roc_curve"][2]:.2f})')
