@@ -77,6 +77,10 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         samples_of_test = int(len(X)/number_of_splits)
         for shift_idx in range(number_of_splits): 
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=samples_of_test, random_state=0, shuffle = False)
+            if TARGET_TY == 'classes': #quick solve for HDwithCM, solve in general
+                # breakpoint()
+                y_train = y_train.astype(int)
+                y_test = y_test.astype(int)
             #shift data
             X = np.roll(X, samples_of_test, axis=0)
             y = np.roll(y, samples_of_test, axis=0)
