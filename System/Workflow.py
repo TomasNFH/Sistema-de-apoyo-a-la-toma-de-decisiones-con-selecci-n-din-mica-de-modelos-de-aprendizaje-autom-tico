@@ -36,15 +36,21 @@ def dyn_model_selection(data = pd.DataFrame(), file_selected=-1, column_selected
     # dtale.show(data_decasted_aux) #hacerle decast !!!!!
     # dtale.show(open_browser=True)
 
-        ### Step 5: Model Building       
+        ### Step 5: Model Building    
     model_info, trained_models, fig1, fig2, fig3 = Mbuilding.model_shake(DATA=data, TARGET_COLUMN=target_column, TARGET_TY=target_type, Fast = FAST)
+    model_info = model_info.rename(columns={'Normalization method': 'NM', 'Feature selection method': 'FSM'})
     sns.lmplot(
-        data=model_info, x="Cross-validation ID", y="Score", row="Normalization method", col="Feature selection method", hue='Model name',
+        data=model_info, x="Cross-validation ID", y="Score", row="NM", col="FSM", hue='Model name',
         palette="crest", ci=None,
         height=4, scatter_kws={"s": 50, "alpha": 1}
     )
-    if PLOT: plt.show()
-    
+    if PLOT: 
+        plt.show()
+        plt.savefig('Output/accuracy.png')
+        fig1.savefig('Output/features.png')
+        if fig2!=0: fig2.savefig('Output/AUC.png')
+        if fig3!=0: fig3.savefig('Output/MConf.png')
+
     return model_info
 
 
