@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 def F_selector(X, y, N_features=5, FLAG=0):
 
     #split data into train and test
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=0)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=0) #ojo aca
     if FLAG == 2: 
         if X.shape[1]>N_features: Mf = N_features
         else: Mf = X.shape[1]
@@ -42,6 +42,7 @@ def F_selector(X, y, N_features=5, FLAG=0):
             importances = corrM.iloc[0][1:]
             importances = importances.to_numpy()
             importances = np.abs(importances)
+            importances = importances[np.logical_not(np.isnan(importances))] 
         imp_sorted = np.sort(importances)
         if len(importances) <= N_features: importancesRET = imp_sorted
         else: importancesRET = imp_sorted[len(importances)-N_features:]
@@ -52,6 +53,5 @@ def F_selector(X, y, N_features=5, FLAG=0):
             indexes = np.append(indexes, int(idx))
         features = X_test.columns[indexes] #select the column names by the indexes
         X_reduced = X.iloc[:, indexes] #reduce X by the most important feature
-
     return X_reduced, features , importancesRET
 
