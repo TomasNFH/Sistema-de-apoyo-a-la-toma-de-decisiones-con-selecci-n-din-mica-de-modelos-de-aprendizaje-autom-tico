@@ -349,7 +349,7 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     # dtale.show()
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
-
+  
 
         with gr.Tab(label="Data integrity"):
             INT_RFLAG = gr.State(0)            
@@ -512,5 +512,5 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
 
                     
 # Launch the Gradio interface
-# demo.launch(share=True)
-demo.launch()
+demo.launch(share=True)
+# demo.launch()
