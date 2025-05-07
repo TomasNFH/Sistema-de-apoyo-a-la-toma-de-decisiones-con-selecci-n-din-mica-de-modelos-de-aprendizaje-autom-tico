@@ -87,7 +87,7 @@ def d_cast(DATA, TARGET_COLUMN):
         if len(DATA[column].unique()) == 1:
             print('drop column because there is only one value')
             cast_flag = True
-            uniqueVAL = DATA[column][0] #preparar para recuperar para el final del modelado (guardar en un df)
+            uniqueVAL = DATA[column].unique()[0] #preparar para recuperar para el final del modelado (guardar en un df)
             id_unique = 0
             DATA = DATA.drop(column, axis=1)
             a,b = -99, -99
