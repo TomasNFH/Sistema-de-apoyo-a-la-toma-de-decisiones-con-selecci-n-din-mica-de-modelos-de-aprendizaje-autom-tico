@@ -8,8 +8,10 @@ from termcolor import colored
 import seaborn as sns
 import matplotlib.pyplot as plt 
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
-def dyn_model_selection(data = pd.DataFrame(), file_selected=-1, column_selected=-1, FAST = True, PLOT = True):
+
+def dyn_model_selection(data = pd.DataFrame(), file_selected=-1, column_selected=-1, FAST = True, PLOT = True, local_file = False):
     
         ### Step 1: Data acquisition ###
     if len(data)==0:
@@ -19,7 +21,7 @@ def dyn_model_selection(data = pd.DataFrame(), file_selected=-1, column_selected
         ### Step 2: Data cast ###  
     data, rosseta = auxiliary_fun.d_cast(data, target_column)
 
-        ### Step 3: Data Cleaning ###    
+        ### Step 3: Data Cleaning ### 
     #min_porcentage_col if missing>10 for a column, we drop it
     data, drop_col, drop_row = DprepNcleaning.data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0)
     print(colored('\nThe result of the number of patients is: '+str(len(data)), 'red', attrs=['bold']))
@@ -36,7 +38,14 @@ def dyn_model_selection(data = pd.DataFrame(), file_selected=-1, column_selected
     # dtale.show(data_decasted_aux) #hacerle decast !!!!!
     # dtale.show(open_browser=True)
 
-        ### Step 5: Model Building    
+        ### Step 5: Model Building  
+
+    #test data extraction
+    X = data.loc[:, data.columns != target_column]
+    y = data[target_column]
+    X_data, X_test, y_data, y_test = train_test_split(X, y, test_size=0.1, shuffle = True)
+    data = pd.concat([y_data, X_data], axis=1)
+
     model_info, trained_models, fig1, fig2, fig3 = Mbuilding.model_shake(DATA=data, TARGET_COLUMN=target_column, TARGET_TY=target_type, Fast = FAST)
     model_info = model_info.rename(columns={'Normalization method': 'NM', 'Feature selection method': 'FSM'})
     sns.lmplot(
@@ -44,7 +53,7 @@ def dyn_model_selection(data = pd.DataFrame(), file_selected=-1, column_selected
         palette="crest", ci=None,
         height=4, scatter_kws={"s": 50, "alpha": 1}
     )
-    if PLOT: 
+    if PLOT and local_file: 
         plt.show()
         plt.savefig('Output/accuracy.png')
         fig1.savefig('Output/features.png')
