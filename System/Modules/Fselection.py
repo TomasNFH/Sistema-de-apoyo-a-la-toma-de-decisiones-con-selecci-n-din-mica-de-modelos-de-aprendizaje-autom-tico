@@ -10,14 +10,10 @@ from sklearn.model_selection import train_test_split
 
 def F_selector(X_train, y_train, N_features=5, FLAG=0):
     '''
-    # X (train y test) - cant be used for training
-    X_train, y_train - used for training
-
+    input: X_train, y_train - used for training
+    return:
     '''
 
-    breakpoint()
-    #split data into train and test
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=0) #ojo aca
     if FLAG == 2: 
         if X.shape[1]>N_features: Mf = N_features
         else: Mf = X.shape[1]
@@ -58,8 +54,8 @@ def F_selector(X_train, y_train, N_features=5, FLAG=0):
         for importance in importancesRET: 
             idx = np.where(importances == importance)[0][0]
             indexes = np.append(indexes, int(idx))
-        breakpoint()
         features = X_train.columns[indexes] #select the column names by the indexes
         X_reduced = X_train.iloc[:, indexes] #reduce X by the most important feature
+        X_reduced = X_reduced.to_numpy() #input was DF, i need np array to model.fit()
     return X_reduced, features , importancesRET, indexes
 

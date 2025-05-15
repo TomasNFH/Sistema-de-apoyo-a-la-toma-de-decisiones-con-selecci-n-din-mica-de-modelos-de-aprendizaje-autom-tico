@@ -58,20 +58,26 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     y = DATA[TARGET_COLUMN]
     columns_X = X.columns
 
-    #BOOTSTRAPPING
+
+    ### leave one out add ###
+
+
+    
+
+    ### Bootstraping ###  
     min_number_of_samples = 50
     number_of_samples = X.shape[0]
     if number_of_samples < min_number_of_samples:
         X, y = resample(X, y, n_samples=min_number_of_samples, replace=True) 
 
-    ### Step 2: Cross Validation ###
-    #suffle the data
-    X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.3, shuffle = True)
-    X = np.append(X_train, X_valid,axis = 0)
-    y = np.append(y_train, y_valid,axis = 0)
-
+    ### Shuffle ###
+    #only shuffle the data
+    X_frag1, X_frag2, y_frag1, y_frag2 = train_test_split(X, y, test_size=0.3, shuffle = True)
+    X = np.append(X_frag1, X_frag2, axis=0)
+    y = np.append(y_frag1, y_frag2, axis=0)
     X[:, 0] = np.arange(1, 101) ####test CV 
-      
+
+    ### Step 2: Cross Validation ###   
     samples_of_valid = int(len(X)/number_of_splits)
     for shift_idx in range(number_of_splits): 
         print('CV id '+str(shift_idx))
@@ -95,8 +101,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                                                 pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
                                                 N_features=FEATURE_N, 
                                                 FLAG=F_FLAG) 
-
-            breakpoint()
             X_validR = X_valid[:, indexes4valid]
             IMPORTANCES_OUT.append(importances)
             CURRENT_FEATURES_OUT.append(current_Features)
@@ -107,6 +111,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
                 ### Step 4: NORMALIZATION ###
                 for N_FLAG in NORM_FLAGS: 
+
                     operation_counter = operation_counter+1
                     if PROGRESS_BAR:
                         print('Progresion in training: '+str( round((operation_counter/number_operations)*100) )+'%, the time is: ', end='')  
