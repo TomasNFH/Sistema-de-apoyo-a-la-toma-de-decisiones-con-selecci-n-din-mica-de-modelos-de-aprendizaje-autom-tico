@@ -50,40 +50,57 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     operation_counter = 0
     number_operations = len(FEATURE_FLAGS)*(number_of_splits)*len(model_stack)*len(NORM_FLAGS)
 
-    ### Step 1: Feature Engeeniring ###
-    IMPORTANCES_OUT = []
-    CURRENT_FEATURES_OUT = []
-    ALL_TRAINED_MODELS = []
+    
+    DATA = DATA.iloc[0:100] ####test CV
 
-    for F_FLAG in FEATURE_FLAGS:
-        X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
-        y = DATA[TARGET_COLUMN]
-        X, current_Features, importances = Fselection.F_selector(X, y, N_features=FEATURE_N, FLAG=F_FLAG) #PQ MANDO Y TAMBIEN?
-        IMPORTANCES_OUT.append(importances)
-        CURRENT_FEATURES_OUT.append(current_Features)
 
-        #BOOTSTRAPPING
-        min_number_of_samples = 50
-        number_of_samples = X.shape[0]
-        if number_of_samples < min_number_of_samples:
-            X, y = resample(X, y, n_samples=min_number_of_samples, replace=True) 
+    X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
+    y = DATA[TARGET_COLUMN]
+    columns_X = X.columns
 
-        ### Step 2: Cross Validation ###
-        #suffle the data
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, shuffle = True)
-        X = np.append(X_train, X_test,axis = 0)
-        y = np.append(y_train, y_test,axis = 0)
-          
-        samples_of_test = int(len(X)/number_of_splits)
-        for shift_idx in range(number_of_splits): 
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=samples_of_test, random_state=0, shuffle = False)
-            if TARGET_TY == 'classes': #quick solve for HDwithCM, solve in general
-                # breakpoint()
-                y_train = y_train.astype(int)
-                y_test = y_test.astype(int)
-            #shift data
-            X = np.roll(X, samples_of_test, axis=0)
-            y = np.roll(y, samples_of_test, axis=0)
+    #BOOTSTRAPPING
+    min_number_of_samples = 50
+    number_of_samples = X.shape[0]
+    if number_of_samples < min_number_of_samples:
+        X, y = resample(X, y, n_samples=min_number_of_samples, replace=True) 
+
+    ### Step 2: Cross Validation ###
+    #suffle the data
+    X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.3, shuffle = True)
+    X = np.append(X_train, X_valid,axis = 0)
+    y = np.append(y_train, y_valid,axis = 0)
+
+    X[:, 0] = np.arange(1, 101) ####test CV 
+      
+    samples_of_valid = int(len(X)/number_of_splits)
+    for shift_idx in range(number_of_splits): 
+        print('CV id '+str(shift_idx))
+        breakpoint()
+        X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=samples_of_valid, random_state=0, shuffle = False)
+        if TARGET_TY == 'classes' or TARGET_TY == 'boolean': #quick solve for HDwithCM, solve in general!!!
+            y_train = y_train.astype(int)
+            y_valid = y_valid.astype(int)
+        #shift data
+        X = np.roll(X, samples_of_valid, axis=0)
+        y = np.roll(y, samples_of_valid, axis=0)
+
+
+        ### Step 1: Feature Engeeniring ###
+        IMPORTANCES_OUT = []
+        CURRENT_FEATURES_OUT = []
+        ALL_TRAINED_MODELS = []
+        for F_FLAG in FEATURE_FLAGS:
+            print('FEAT id '+str(F_FLAG))
+            X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
+                                                pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
+                                                N_features=FEATURE_N, 
+                                                FLAG=F_FLAG) 
+
+            breakpoint()
+            X_validR = X_valid[:, indexes4valid]
+            IMPORTANCES_OUT.append(importances)
+            CURRENT_FEATURES_OUT.append(current_Features)
+
             ### Step 3: Model selection ###
             for model_name in model_stack:
                 print('Model name is '+model_name)
@@ -103,9 +120,9 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                     model = auxiliary_fun.model_dashboard(model_name)
                     # if F_FLAG==2:
                         # breakpoint()
-                    model.fit(X_train, y_train)
+                    model.fit(X_trainR, y_train)
                     ALL_TRAINED_MODELS.append(model)
-                    prediction = model.predict(X_test)
+                    prediction = model.predict(X_validR)
                     
                     # define values in case we dont estimeate them (continues case 4 example)
                     accurecy = np.nan
@@ -120,7 +137,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
                     if TARGET_TY == 'boolean' or TARGET_TY == 'classes':
                         classes_of_target = np.unique(y)
-                        CoMtx = confusion_matrix(y_test, prediction, labels=list(classes_of_target))  #ADD LABELS TO MATRIX (MAKE IT DF)
+                        CoMtx = confusion_matrix(y_valid, prediction, labels=list(classes_of_target))  #ADD LABELS TO MATRIX (MAKE IT DF)
                         accurecy = np.sum(np.diag(CoMtx))/len(prediction)
                         accurecy = accurecy*100
                         if TARGET_TY == 'boolean':
@@ -133,19 +150,19 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                             Specifity = (1-Specifity)*100
                             F1 = 2*(accurecy*Recall)/((accurecy+Recall))
                             # breakpoint()
-                            metrics_result = auxiliary_fun.computemetrics(model, X_test, y_test)
+                            metrics_result = auxiliary_fun.computemetrics(model, X_validR, y_valid)
                             tpr = metrics_result['roc_curve'][1]
                             fpr = metrics_result['roc_curve'][0]
                             auc = metrics_result['roc_curve'][2]
 
                             ### brier score loss ###
-                            prediction_proba = model.predict_proba(X_test)
+                            prediction_proba = model.predict_proba(X_validR)
                             prediction_proba_positive_clase = prediction_proba[:,1] 
-                            brier_score = brier_score_loss(y_test, prediction_proba_positive_clase)
+                            brier_score = brier_score_loss(y_valid, prediction_proba_positive_clase)
                     model_return.loc[len(model_return.index)] = [TARGET_COLUMN, TARGET_TY, model_name, 
                                                                  Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features.values.tolist(), 
                                                                  number_of_splits, shift_idx, CoMtx, 
-                                                                 tpr, fpr, Recall, F1, auc, model.score(X_test, y_test), brier_score] 
+                                                                 tpr, fpr, Recall, F1, auc, model.score(X_validR, y_valid), brier_score] 
     feature_data = pd.DataFrame([]) 
     Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
     for idx in range(len(IMPORTANCES_OUT)):

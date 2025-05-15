@@ -8,10 +8,16 @@ from sklearn.model_selection import train_test_split
 
 
 
-def F_selector(X, y, N_features=5, FLAG=0):
+def F_selector(X_train, y_train, N_features=5, FLAG=0):
+    '''
+    # X (train y test) - cant be used for training
+    X_train, y_train - used for training
 
+    '''
+
+    breakpoint()
     #split data into train and test
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=0) #ojo aca
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=0) #ojo aca
     if FLAG == 2: 
         if X.shape[1]>N_features: Mf = N_features
         else: Mf = X.shape[1]
@@ -37,6 +43,7 @@ def F_selector(X, y, N_features=5, FLAG=0):
             model.fit(X_train, y_train)
             importances = model.feature_importances_ #puedo cambiar el impurity de Gini a otro, probar
         if FLAG == 1:
+            # breakpoint()
             data = pd.concat([y_train, X_train], axis=1)
             corrM = data.corr() 
             importances = corrM.iloc[0][1:]
@@ -51,7 +58,8 @@ def F_selector(X, y, N_features=5, FLAG=0):
         for importance in importancesRET: 
             idx = np.where(importances == importance)[0][0]
             indexes = np.append(indexes, int(idx))
-        features = X_test.columns[indexes] #select the column names by the indexes
-        X_reduced = X.iloc[:, indexes] #reduce X by the most important feature
-    return X_reduced, features , importancesRET
+        breakpoint()
+        features = X_train.columns[indexes] #select the column names by the indexes
+        X_reduced = X_train.iloc[:, indexes] #reduce X by the most important feature
+    return X_reduced, features , importancesRET, indexes
 
