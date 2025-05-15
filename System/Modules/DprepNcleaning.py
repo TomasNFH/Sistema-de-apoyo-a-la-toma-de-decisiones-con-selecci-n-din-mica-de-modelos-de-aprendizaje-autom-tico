@@ -33,13 +33,16 @@ def data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0):
 
 def data_normF(data, FLAG=1):
     
+
+    
+    breakpoint()
     data_norm = data
     ### BYPASS NORMALIZATION ###
     if FLAG == 0:
         data_norm = data
     else:
         ### min-max normalization ###
-        if FLAG:  
+        if FLAG == 1:  
             scaler = MinMaxScaler()
             scaler.fit(data)
             X_norm_arr = scaler.transform(data)

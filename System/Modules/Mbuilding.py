@@ -27,17 +27,17 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                                            'Features used', 'Number of splits', 'Cross-validation ID', 
                                            'Confusion matrix', 'True Positive Rate', 'False Positive Rate', 'Recall', 
                                            'F1 score', 'AUC', 'Score', 'Brier score loss'])
-    NORM_FLAGS = np.array([0,1,2])
+    NORM_FLAGS = np.array([0,1,2]) #we aplly only to train data 
     FEATURE_FLAGS = np.array([0,1,2]) #dont use 2 due to time
     if Fast:
         FEATURE_FLAGS = np.array([0,1])
 
     if TARGET_TY == 'boolean':
         model_stack = ['RandomForestClassifier', 'LogisticRegression', 'KNeighborsClassifier', 'SupportVectorClassification', 'GradientBoostingClassifier', 'GaussianNB']
-        NORM_FLAGS = np.array([0])
+        # NORM_FLAGS = np.array([0])
     if TARGET_TY == 'classes':
         model_stack = ['RandomForestClassifier', 'KNeighborsClassifier', 'SupportVectorClassification']   
-        NORM_FLAGS = np.array([0])
+        # NORM_FLAGS = np.array([0])
     if TARGET_TY == 'continuous':
         # model_stack = ['LinearRegression', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
         model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
@@ -50,9 +50,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     operation_counter = 0
     number_operations = len(FEATURE_FLAGS)*(number_of_splits)*len(model_stack)*len(NORM_FLAGS)
 
-    
-    DATA = DATA.iloc[0:100] ####test CV
-
 
     X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
     y = DATA[TARGET_COLUMN]
@@ -62,7 +59,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     ### leave one out add ###
 
 
-    
+    # breakpoint()
 
     ### Bootstraping ###  
     min_number_of_samples = 50
@@ -75,13 +72,10 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     X_frag1, X_frag2, y_frag1, y_frag2 = train_test_split(X, y, test_size=0.3, shuffle = True)
     X = np.append(X_frag1, X_frag2, axis=0)
     y = np.append(y_frag1, y_frag2, axis=0)
-    X[:, 0] = np.arange(1, 101) ####test CV 
 
     ### Step 2: Cross Validation ###   
     samples_of_valid = int(len(X)/number_of_splits)
     for shift_idx in range(number_of_splits): 
-        print('CV id '+str(shift_idx))
-        breakpoint()
         X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=samples_of_valid, random_state=0, shuffle = False)
         if TARGET_TY == 'classes' or TARGET_TY == 'boolean': #quick solve for HDwithCM, solve in general!!!
             y_train = y_train.astype(int)
@@ -90,13 +84,11 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         X = np.roll(X, samples_of_valid, axis=0)
         y = np.roll(y, samples_of_valid, axis=0)
 
-
         ### Step 1: Feature Engeeniring ###
         IMPORTANCES_OUT = []
         CURRENT_FEATURES_OUT = []
         ALL_TRAINED_MODELS = []
         for F_FLAG in FEATURE_FLAGS:
-            print('FEAT id '+str(F_FLAG))
             X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
                                                 pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
                                                 N_features=FEATURE_N, 
@@ -107,10 +99,10 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
             ### Step 3: Model selection ###
             for model_name in model_stack:
-                print('Model name is '+model_name)
 
                 ### Step 4: NORMALIZATION ###
-                for N_FLAG in NORM_FLAGS: 
+                for N_FLAG in NORM_FLAGS:
+                    # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
 
                     operation_counter = operation_counter+1
                     if PROGRESS_BAR:
@@ -168,6 +160,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                                                                  Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features.values.tolist(), 
                                                                  number_of_splits, shift_idx, CoMtx, 
                                                                  tpr, fpr, Recall, F1, auc, model.score(X_validR, y_valid), brier_score] 
+    breakpoint()
     feature_data = pd.DataFrame([]) 
     Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
     for idx in range(len(IMPORTANCES_OUT)):
