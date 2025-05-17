@@ -74,7 +74,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     X = np.append(X_frag1, X_frag2, axis=0)
     y = np.append(y_frag1, y_frag2, axis=0)
 
-    ### Step 2: Cross Validation ###   
+    ### Step 2: Cross Validation (FIRST STEP)###   
     samples_of_valid = int(len(X)/number_of_splits)
     for shift_idx in range(number_of_splits): 
         print('\n shift_idx '+str(shift_idx))
@@ -98,7 +98,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                                                 FLAG=F_FLAG) 
             X_validR = X_valid[:, indexes4valid]
             IMPORTANCES_OUT.append(importances)
-            CURRENT_FEATURES_OUT.append(current_Features)
+            CURRENT_FEATURES_OUT.append(current_Features) #doesnt represent all features
 
             ### Step 3: Model selection ###
             for model_name in model_stack:
@@ -168,12 +168,17 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     
 
     # SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
+
+    Feat_best_set = pd.DataFrame(columns = ['Model', 'Feature method', 'Best set', 'Score' ])
+
     for model_nm in model_stack:
         for feature_nm in Feature_methods:
             feat_n_score = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'Score']]
             best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
+            best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
+
+            Feat_best_set.loc[len(model_return.index)] = [model_nm, feature_nm, best_set, best_set_score] 
             
-            breakpoint()
 
 
     breakpoint()
