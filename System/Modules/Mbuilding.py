@@ -166,8 +166,9 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                                                                  number_of_splits, shift_idx, CoMtx, 
                                                                  tpr, fpr, Recall, F1, auc, model.score(X_validR, y_valid), brier_score] 
     
-    for model_name in model_stack:
-        for F_FLAG in FEATURE_FLAGS:
+    for model_nm in model_stack:
+        for feature_nm in Feature_methods:
+            feat_n_score = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'Score']]
             breakpoint()
 
 
