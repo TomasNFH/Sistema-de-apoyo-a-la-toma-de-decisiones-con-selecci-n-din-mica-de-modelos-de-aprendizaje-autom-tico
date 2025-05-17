@@ -172,7 +172,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     Feat_best_set = pd.DataFrame(columns = ['Model', 'Feature method', 'Best set', 'Score' ])
 
     for model_nm in model_stack:
-        for feature_nm in Feature_methods:
+        for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
             breakpoint()
             feat_n_score = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'Score']]
             best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
