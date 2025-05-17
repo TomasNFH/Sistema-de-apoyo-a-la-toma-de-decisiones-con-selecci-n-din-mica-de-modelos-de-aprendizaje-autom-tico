@@ -76,6 +76,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     ### Step 2: Cross Validation ###   
     samples_of_valid = int(len(X)/number_of_splits)
     for shift_idx in range(number_of_splits): 
+        print('\n shift_idx '+str(shift_idx))
         X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=samples_of_valid, random_state=0, shuffle = False)
         if TARGET_TY == 'classes' or TARGET_TY == 'boolean': #quick solve for HDwithCM, solve in general!!!
             y_train = y_train.astype(int)
@@ -89,6 +90,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         CURRENT_FEATURES_OUT = []
         ALL_TRAINED_MODELS = []
         for F_FLAG in FEATURE_FLAGS:
+            print('F_flag '+str(F_FLAG))
             X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
                                                 pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
                                                 N_features=FEATURE_N, 
@@ -99,9 +101,11 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
             ### Step 3: Model selection ###
             for model_name in model_stack:
+                print('model '+str(model_name))
 
                 ### Step 4: NORMALIZATION ###
                 for N_FLAG in NORM_FLAGS:
+                    print('normalization '+str(N_FLAG))
                     # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
 
                     operation_counter = operation_counter+1
