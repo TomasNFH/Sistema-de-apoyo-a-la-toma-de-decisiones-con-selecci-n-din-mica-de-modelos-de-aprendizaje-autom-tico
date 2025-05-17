@@ -166,9 +166,13 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                                                                  number_of_splits, shift_idx, CoMtx, 
                                                                  tpr, fpr, Recall, F1, auc, model.score(X_validR, y_valid), brier_score] 
     
+
+    # SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
     for model_nm in model_stack:
         for feature_nm in Feature_methods:
             feat_n_score = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'Score']]
+            best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
+            
             breakpoint()
 
 
