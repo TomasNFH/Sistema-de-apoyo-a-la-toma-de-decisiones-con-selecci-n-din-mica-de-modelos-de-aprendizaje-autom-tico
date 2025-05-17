@@ -177,7 +177,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
             best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
             best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
 
-            Feat_best_set.loc[len(model_return.index)] = [model_nm, feature_nm, best_set, best_set_score] 
+            Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, feature_nm, best_set, best_set_score] 
             
 
 
