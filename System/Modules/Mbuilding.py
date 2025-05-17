@@ -27,7 +27,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                                            'Features used', 'Number of splits', 'Cross-validation ID', 
                                            'Confusion matrix', 'True Positive Rate', 'False Positive Rate', 'Recall', 
                                            'F1 score', 'AUC', 'Score', 'Brier score loss'])
-    NORM_FLAGS = np.array([0,1,2]) #we aplly only to train data 
+    NORM_FLAGS = np.array([0,1,2]) #we aplly only to train data, why? to all data?
     FEATURE_FLAGS = np.array([0,1,2]) #dont use 2 due to time
     if Fast:
         FEATURE_FLAGS = np.array([0,1])
@@ -42,6 +42,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         # model_stack = ['LinearRegression', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
         model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
 
+    NORM_FLAGS = np.array([0]) #dont use normalization just for know
 
     Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
     Normalization_methods = ['No', 'Min-Max', 'Z-score']
@@ -175,7 +176,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
   
     
     if Fast == False:
-        fig_features, (ax1, ax2, ax3) = plt.subplots(3, 1)
+        fig_features, (ax1, ax2, RandomForestClassifierax3) = plt.subplots(3, 1)
         ax3.bar(feature_data[feature_data['Feature method']==Feature_methods[2]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[2]]['Score'], color=colors_plot[0])
         ax3.set_ylim(0, 1)
     else: fig_features, (ax1, ax2) = plt.subplots(2, 1)
