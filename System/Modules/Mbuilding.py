@@ -154,7 +154,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                             prediction_proba = model.predict_proba(X_validR)
                             prediction_proba_positive_clase = prediction_proba[:,1] 
                             brier_score = brier_score_loss(y_valid, prediction_proba_positive_clase)
-                    breakpoint()
                     FS_return.loc[len(FS_return.index)] = [model_name, Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features.values.tolist(), importances, 
                                                             number_of_splits, shift_idx, CoMtx, 
                                                             tpr, fpr, Recall, F1, auc, model.score(X_validR, y_valid), brier_score] 
@@ -162,14 +161,15 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
     # SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
 
-    Feat_best_set = pd.DataFrame(columns = ['Model', 'Feature method', 'Best set', 'Score' ])
+    Feat_best_set = pd.DataFrame(columns = ['Model', 'Feature method', 'Best set', 'Importances', 'Score' ])
 
     for model_nm in model_stack:
         for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
             breakpoint()
-            feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'Score']]
+            feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'Importances', 'Score']]
             best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
             best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
+            best_set_importances = feat_n_score.sort_values(by='Score').iloc[-1]['Importances']
 
             Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, feature_nm, best_set, best_set_score] 
             
