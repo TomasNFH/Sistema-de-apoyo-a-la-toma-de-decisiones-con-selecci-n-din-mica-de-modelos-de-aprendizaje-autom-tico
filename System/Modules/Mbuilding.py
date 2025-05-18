@@ -217,7 +217,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
                     indexes4X = []
                     for idxCF in range(len(current_Features)):
-                        breakpoint()
                         indexes4X.append(DATA.loc[:, DATA.columns != TARGET_COLUMN].columns.get_loc(current_Features[idxCF]))
                     X_trainR = X_train[:, indexes4X]
                     X_validR = X_valid[:, indexes4X]
