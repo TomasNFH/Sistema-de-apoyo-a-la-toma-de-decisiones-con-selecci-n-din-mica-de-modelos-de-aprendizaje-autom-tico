@@ -213,9 +213,9 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                     print('normalization '+str(N_FLAG))
                     # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
                     breakpoint()
-                    current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Best set'][0]
-                    importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Importances'][0]
-
+                    Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Best set'].values.tolist()
+                    importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Importances'].values[0]
+                    
                     indexes4X = []
                     for idxCF in range(len(current_Features)):
                         indexes4X.append(DATA.loc[:, DATA.columns != TARGET_COLUMN].columns.get_loc(current_Features[idxCF]))
