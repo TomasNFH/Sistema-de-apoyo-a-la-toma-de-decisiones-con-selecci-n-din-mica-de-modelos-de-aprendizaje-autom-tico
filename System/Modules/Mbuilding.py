@@ -278,7 +278,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                             prediction_proba_positive_clase = prediction_proba[:,1] 
                             brier_score = brier_score_loss(y_valid, prediction_proba_positive_clase)
                     model_return.loc[len(model_return.index)] = [TARGET_COLUMN, TARGET_TY, model_name, 
-                                                                 Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features.values.tolist(), 
+                                                                 Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features, 
                                                                  number_of_splits, shift_idx, CoMtx, 
                                                                  tpr, fpr, Recall, F1, auc, model.score(X_validR, y_valid), brier_score] 
                     breakpoint()
