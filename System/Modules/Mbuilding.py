@@ -210,16 +210,20 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
                 ### Step 4: NORMALIZATION ###
                 for N_FLAG in NORM_FLAGS:
+                    print('normalization '+str(N_FLAG))
+                    # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
+
                     current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Best set'][0]
                     importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Importances'][0]
 
                     indexes4X = []
                     for idxCF in range(len(current_Features)):
                         indexes4X.append(DATA.loc[:, DATA.columns != TARGET_COLUMN].columns.get_loc(current_Features[idxCF]))
-
+                    X_trainR = X_train[:, indexes4X]
+                    X_validR = X_valid[:, indexes4X]
                     breakpoint()
-                    print('normalization '+str(N_FLAG))
-                    # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
+                    
+                    
 
                     operation_counter = operation_counter+1
                     if PROGRESS_BAR:
@@ -277,6 +281,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                                                                  Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features.values.tolist(), 
                                                                  number_of_splits, shift_idx, CoMtx, 
                                                                  tpr, fpr, Recall, F1, auc, model.score(X_validR, y_valid), brier_score] 
+                    breakpoint()
 
 
 
