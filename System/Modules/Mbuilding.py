@@ -218,7 +218,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                     importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Importances'][0]
 
                     indexes4X = []
-                    for idxCF in len(current_Features):
+                    for idxCF in range(len(current_Features)):
                         breakpoint()
                         indexes4X.append(DATA.columns.get_loc(current_Features[idxCF]))
 
