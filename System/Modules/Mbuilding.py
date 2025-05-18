@@ -198,14 +198,14 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         ALL_TRAINED_MODELS = []
         for F_FLAG in FEATURE_FLAGS:
             print('F_flag '+str(F_FLAG))
-            breakpoint()
+            # breakpoint()
             # X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
             #                                     pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
             #                                     N_features=FEATURE_N, 
             #                                     FLAG=F_FLAG) 
             # X_validR = X_valid[:, indexes4valid]
-            IMPORTANCES_OUT.append(importances)
-            CURRENT_FEATURES_OUT.append(current_Features) #doesnt represent all features
+            # IMPORTANCES_OUT.append(importances)
+            # CURRENT_FEATURES_OUT.append(current_Features) #doesnt represent all features
 
             ### Step 3: Model selection ###
             for model_name in model_stack:
@@ -213,6 +213,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
                 ### Step 4: NORMALIZATION ###
                 for N_FLAG in NORM_FLAGS:
+                    breakpoint()
                     print('normalization '+str(N_FLAG))
                     # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
 
