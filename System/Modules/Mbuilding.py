@@ -57,6 +57,8 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     number_operations = len(FEATURE_FLAGS)*(number_of_splits)*len(model_stack)*len(NORM_FLAGS)
 
 
+    DATA = DATA.iloc[0:100] ####test CV
+
     X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
     y = DATA[TARGET_COLUMN]
     columns_X = X.columns
@@ -78,6 +80,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     X_frag1, X_frag2, y_frag1, y_frag2 = train_test_split(X, y, test_size=0.3, shuffle = True)
     X = np.append(X_frag1, X_frag2, axis=0)
     y = np.append(y_frag1, y_frag2, axis=0)
+    X[:, 0] = np.arange(1, 101) ####test CV 
 
 
 
