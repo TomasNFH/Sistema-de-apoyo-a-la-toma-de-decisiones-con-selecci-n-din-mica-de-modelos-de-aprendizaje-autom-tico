@@ -169,7 +169,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
             feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'importances', 'Score']]
             best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
             best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
-            best_set_importances = feat_n_score.sort_values(by='Score').iloc[-1]['Importances']
+            best_set_importances = feat_n_score.sort_values(by='Score').iloc[-1]['importances']
 
             Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, feature_nm, best_set, best_set_score] 
             
