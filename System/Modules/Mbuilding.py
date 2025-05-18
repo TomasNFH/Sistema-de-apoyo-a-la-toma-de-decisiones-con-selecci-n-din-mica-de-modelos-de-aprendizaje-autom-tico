@@ -214,6 +214,15 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                 ### Step 4: NORMALIZATION ###
                 for N_FLAG in NORM_FLAGS:
                     breakpoint()
+                    current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Best set'][0]
+                    importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Importances'][0]
+
+                    indexes4X = []
+                    for idxCF in len(current_Features):
+                        breakpoint()
+                        indexes4X.append(DATA.columns.get_loc(current_Features[idxCF]))
+
+                    breakpoint()
                     print('normalization '+str(N_FLAG))
                     # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
 
