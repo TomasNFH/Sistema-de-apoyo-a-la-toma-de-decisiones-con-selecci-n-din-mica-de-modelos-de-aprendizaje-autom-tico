@@ -27,6 +27,11 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                                            'Features used', 'Number of splits', 'Cross-validation ID', 
                                            'Confusion matrix', 'True Positive Rate', 'False Positive Rate', 'Recall', 
                                            'F1 score', 'AUC', 'Score', 'Brier score loss'])
+    FS_return = pd.DataFrame(columns = ['Model name', 'Normalization method', 'Feature selection method', 
+                                           'Features used', 'importances', 'Number of splits', 'Cross-validation ID',
+                                           'Confusion matrix', 'True Positive Rate', 'False Positive Rate', 'Recall', 
+                                           'F1 score', 'AUC', 'Score', 'Brier score loss'])
+
     NORM_FLAGS = np.array([0,1,2]) #we aplly only to train data, why? to all data?
     FEATURE_FLAGS = np.array([0,1,2]) #dont use 2 due to time
     if Fast:
@@ -74,7 +79,106 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     X = np.append(X_frag1, X_frag2, axis=0)
     y = np.append(y_frag1, y_frag2, axis=0)
 
+
+
+##########################################################################
+
+
     ### Step 2: Cross Validation (FIRST STEP)###   
+    samples_of_valid = int(len(X)/number_of_splits)
+    for shift_idx in range(number_of_splits): 
+        print('\n shift_idx '+str(shift_idx))
+        X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=samples_of_valid, random_state=0, shuffle = False)
+        if TARGET_TY == 'classes' or TARGET_TY == 'boolean': #quick solve for HDwithCM, solve in general!!!
+            y_train = y_train.astype(int)
+            y_valid = y_valid.astype(int)
+        #shift data
+        X = np.roll(X, samples_of_valid, axis=0)
+        y = np.roll(y, samples_of_valid, axis=0)
+
+        ### Step 1: Feature Engeeniring ###
+        for F_FLAG in FEATURE_FLAGS:
+            print('F_flag '+str(F_FLAG))
+            X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
+                                                pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
+                                                N_features=FEATURE_N, 
+                                                FLAG=F_FLAG) 
+            X_validR = X_valid[:, indexes4valid]
+
+            ### Step 3: Model selection ###
+            for model_name in model_stack:
+                print('model '+str(model_name))
+
+                ### Step 4: NORMALIZATION ###
+                for N_FLAG in NORM_FLAGS:
+                    print('normalization '+str(N_FLAG))
+                    # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
+
+                    ### Step 5: Model Building 
+                    model = auxiliary_fun.model_dashboard(model_name)
+                    model.fit(X_trainR, y_train)
+                    prediction = model.predict(X_validR)
+                    
+                    # define values in case we dont estimeate them (continues case 4 example)
+                    accurecy = np.nan
+                    Specifity = np.nan
+                    tpr = np.nan
+                    fpr = np.nan
+                    auc = np.nan
+                    Recall = np.nan
+                    F1 = np.nan
+                    CoMtx = np.nan
+                    brier_score = np.nan
+
+                    if TARGET_TY == 'boolean' or TARGET_TY == 'classes':
+                        classes_of_target = np.unique(y)
+                        CoMtx = confusion_matrix(y_valid, prediction, labels=list(classes_of_target))  #ADD LABELS TO MATRIX (MAKE IT DF)
+                        accurecy = np.sum(np.diag(CoMtx))/len(prediction)
+                        accurecy = accurecy*100
+                        if TARGET_TY == 'boolean':
+                            TP = CoMtx[0,0]
+                            TP_FN = np.sum(CoMtx[0,:])
+                            Recall = TP/TP_FN
+                            TN = CoMtx[1,1]
+                            TN_FP = CoMtx[1,:]
+                            Specifity = TN/np.sum(TN_FP)
+                            Specifity = (1-Specifity)*100
+                            F1 = 2*(accurecy*Recall)/((accurecy+Recall))
+                            # breakpoint()
+                            metrics_result = auxiliary_fun.computemetrics(model, X_validR, y_valid)
+                            tpr = metrics_result['roc_curve'][1]
+                            fpr = metrics_result['roc_curve'][0]
+                            auc = metrics_result['roc_curve'][2]
+
+                            ### brier score loss ###
+                            prediction_proba = model.predict_proba(X_validR)
+                            prediction_proba_positive_clase = prediction_proba[:,1] 
+                            brier_score = brier_score_loss(y_valid, prediction_proba_positive_clase)
+                    breakpoint()
+                    FS_return.loc[len(FS_return.index)] = [model_name, Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features.values.tolist(), importances, 
+                                                            number_of_splits, shift_idx, CoMtx, 
+                                                            tpr, fpr, Recall, F1, auc, model.score(X_validR, y_valid), brier_score] 
+    
+
+    # SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
+
+    Feat_best_set = pd.DataFrame(columns = ['Model', 'Feature method', 'Best set', 'Score' ])
+
+    for model_nm in model_stack:
+        for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
+            breakpoint()
+            feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'Score']]
+            best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
+            best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
+
+            Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, feature_nm, best_set, best_set_score] 
+            
+
+
+##########################################################################333333
+
+
+    ### Step 2: Cross Validation (SECOND STEP)###   
     samples_of_valid = int(len(X)/number_of_splits)
     for shift_idx in range(number_of_splits): 
         print('\n shift_idx '+str(shift_idx))
@@ -165,21 +269,28 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                                                                  Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features.values.tolist(), 
                                                                  number_of_splits, shift_idx, CoMtx, 
                                                                  tpr, fpr, Recall, F1, auc, model.score(X_validR, y_valid), brier_score] 
-    
 
-    # SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
 
-    Feat_best_set = pd.DataFrame(columns = ['Model', 'Feature method', 'Best set', 'Score' ])
 
-    for model_nm in model_stack:
-        for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
-            breakpoint()
-            feat_n_score = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'Score']]
-            best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
-            best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
 
-            Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, feature_nm, best_set, best_set_score] 
-            
+
+
+##########################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     breakpoint()
