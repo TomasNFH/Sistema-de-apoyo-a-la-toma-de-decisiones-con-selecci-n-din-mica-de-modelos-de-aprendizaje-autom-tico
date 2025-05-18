@@ -212,7 +212,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                 for N_FLAG in NORM_FLAGS:
                     print('normalization '+str(N_FLAG))
                     # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
-                    current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Best set'].values.tolist()[0]
+                    current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG]')['Best set'].values.tolist()[0]
                     importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Importances'].values[0]
 
                     indexes4X = []
