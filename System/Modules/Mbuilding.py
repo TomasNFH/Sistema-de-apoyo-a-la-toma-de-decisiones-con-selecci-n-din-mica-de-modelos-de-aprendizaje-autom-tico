@@ -81,8 +81,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     X = np.append(X_frag1, X_frag2, axis=0)
     y = np.append(y_frag1, y_frag2, axis=0)
     X[:, 0] = np.arange(1, 101) ####test CV 
-    breakpoint()
-
 
 ##########################################################################
 
@@ -179,7 +177,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
 ##########################################################################333333
 
-    breakpoint()
     ### Step 2: Cross Validation (SECOND STEP)###   
     samples_of_valid = int(len(X)/number_of_splits)
     for shift_idx in range(number_of_splits): 
@@ -213,14 +210,12 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
                 ### Step 4: NORMALIZATION ###
                 for N_FLAG in NORM_FLAGS:
-                    breakpoint()
                     current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Best set'][0]
                     importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Importances'][0]
 
                     indexes4X = []
                     for idxCF in range(len(current_Features)):
-                        breakpoint()
-                        indexes4X.append(DATA.columns.get_loc(current_Features[idxCF]))
+                        indexes4X.append(DATA.loc[:, DATA.columns != TARGET_COLUMN].columns.get_loc(current_Features[idxCF]))
 
                     breakpoint()
                     print('normalization '+str(N_FLAG))
