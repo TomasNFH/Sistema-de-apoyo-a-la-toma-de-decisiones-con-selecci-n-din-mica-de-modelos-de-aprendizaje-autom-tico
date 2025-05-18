@@ -165,7 +165,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
     for model_nm in model_stack:
         for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
-            breakpoint()
             feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'importances', 'Score']]
             best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
             best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
@@ -177,7 +176,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
 ##########################################################################333333
 
-
+    breakpoint()
     ### Step 2: Cross Validation (SECOND STEP)###   
     samples_of_valid = int(len(X)/number_of_splits)
     for shift_idx in range(number_of_splits): 
@@ -196,11 +195,12 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         ALL_TRAINED_MODELS = []
         for F_FLAG in FEATURE_FLAGS:
             print('F_flag '+str(F_FLAG))
-            X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
-                                                pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
-                                                N_features=FEATURE_N, 
-                                                FLAG=F_FLAG) 
-            X_validR = X_valid[:, indexes4valid]
+            breakpoint()
+            # X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
+            #                                     pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
+            #                                     N_features=FEATURE_N, 
+            #                                     FLAG=F_FLAG) 
+            # X_validR = X_valid[:, indexes4valid]
             IMPORTANCES_OUT.append(importances)
             CURRENT_FEATURES_OUT.append(current_Features) #doesnt represent all features
 
