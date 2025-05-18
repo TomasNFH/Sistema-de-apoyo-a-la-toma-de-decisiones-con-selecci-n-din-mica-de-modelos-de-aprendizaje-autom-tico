@@ -166,7 +166,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     for model_nm in model_stack:
         for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
             breakpoint()
-            feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'Importances', 'Score']]
+            feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'importances', 'Score']]
             best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
             best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
             best_set_importances = feat_n_score.sort_values(by='Score').iloc[-1]['Importances']
