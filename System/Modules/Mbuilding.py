@@ -13,8 +13,7 @@ from alive_progress import alive_bar
 import time
 
 
-def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
-
+def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     PROGRESS_BAR = True
 
     start_time = time.time()
@@ -24,7 +23,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     FEATURE_N = 5 #can test to change it or make it auto to find the best N
     model_return = pd.DataFrame(columns = ['Target column', 'Target type', 'Model name', 
                                            'Normalization method', 'Feature selection method', 
-                                           'Features used', 'Number of splits', 'Cross-validation ID', 
+                                           'Features used', 'importances', 'Number of splits', 'Cross-validation ID', 
                                            'Confusion matrix', 'True Positive Rate', 'False Positive Rate', 'Recall', 
                                            'F1 score', 'AUC', 'Score', 'Brier score loss'])
     FS_return = pd.DataFrame(columns = ['Model name', 'Normalization method', 'Feature selection method', 
@@ -47,7 +46,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
         # model_stack = ['LinearRegression', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
         model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
 
-    NORM_FLAGS = np.array([0]) #dont use normalization just for know
+    # NORM_FLAGS = np.array([0]) #dont use normalization just for know
 
     Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
     Normalization_methods = ['No', 'Min-Max', 'Z-score']
@@ -88,7 +87,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
     ### Step 2: Cross Validation (FIRST STEP)###   
     samples_of_valid = int(len(X)/number_of_splits)
     for shift_idx in range(number_of_splits): 
-        print('\n shift_idx '+str(shift_idx))
+        print('\nshift_idx '+str(shift_idx))
         X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=samples_of_valid, random_state=0, shuffle = False)
         if TARGET_TY == 'classes' or TARGET_TY == 'boolean': #quick solve for HDwithCM, solve in general!!!
             y_train = y_train.astype(int)
@@ -99,7 +98,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
         ### Step 1: Feature Engeeniring ###
         for F_FLAG in FEATURE_FLAGS:
-            print('F_flag '+str(F_FLAG))
+            print('    F_flag '+str(Feature_methods[F_FLAG]))
             X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
                                                 pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
                                                 N_features=FEATURE_N, 
@@ -108,12 +107,13 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
             ### Step 3: Model selection ###
             for model_name in model_stack:
-                print('model '+str(model_name))
+                print('     model '+str(model_name))
 
                 ### Step 4: NORMALIZATION ###
                 for N_FLAG in NORM_FLAGS:
-                    print('normalization '+str(N_FLAG))
-                    # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
+                    print('         normalization '+str(N_FLAG))
+                    X_trainR = DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
+                    X_validR = DprepNcleaning.data_normF(X_validR, FLAG=N_FLAG) #arreglar 
 
                     ### Step 5: Model Building 
                     model = auxiliary_fun.model_dashboard(model_name)
@@ -174,27 +174,30 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
             Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, feature_nm, best_set, best_set_importances, best_set_score] 
             
 
-
+    print('\n\n\n END OF FIRST CV WITH FS')
+    breakpoint()
 ##########################################################################333333
 
     ### Step 2: Cross Validation (SECOND STEP)###   
     samples_of_valid = int(len(X)/number_of_splits)
     for shift_idx in range(number_of_splits): 
-        print('\n shift_idx '+str(shift_idx))
-        X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=samples_of_valid, random_state=0, shuffle = False)
+        print('\nshift_idx '+str(shift_idx))
+        # X_drop and y_drop are not used <we use TEST>
+        X_train, X_drop, y_train, y_drop = train_test_split(X, y, test_size=samples_of_valid, random_state=0, shuffle = False)
         if TARGET_TY == 'classes' or TARGET_TY == 'boolean': #quick solve for HDwithCM, solve in general!!!
             y_train = y_train.astype(int)
-            y_valid = y_valid.astype(int)
+            Y_TEST = Y_TEST.astype(int)
         #shift data
+        print(X)
         X = np.roll(X, samples_of_valid, axis=0)
         y = np.roll(y, samples_of_valid, axis=0)
 
         ### Step 1: Feature Engeeniring ###
-        IMPORTANCES_OUT = []
-        CURRENT_FEATURES_OUT = []
+        # IMPORTANCES_OUT = [] #al final solo queda para el ultimo cv
+        # CURRENT_FEATURES_OUT = []
         ALL_TRAINED_MODELS = []
         for F_FLAG in FEATURE_FLAGS:
-            print('F_flag '+str(F_FLAG))
+            print('    F_flag '+str(Feature_methods[F_FLAG]))
             # breakpoint()
             # X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
             #                                     pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
@@ -206,23 +209,25 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
             ### Step 3: Model selection ###
             for model_name in model_stack:
-                print('model '+str(model_name))
+                print('     model '+str(model_name))
 
                 ### Step 4: NORMALIZATION ###
                 for N_FLAG in NORM_FLAGS:
-                    print('normalization '+str(N_FLAG))
+                    print('         normalization '+str(N_FLAG))
                     # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
                     current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG]')['Best set'].values.tolist()[0]
                     importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Importances'].values[0]
+                    
+                    # IMPORTANCES_OUT.append(importances)
+                    # CURRENT_FEATURES_OUT.append(current_Features)
 
                     indexes4X = []
                     for idxCF in range(len(current_Features)):
                         indexes4X.append(DATA.loc[:, DATA.columns != TARGET_COLUMN].columns.get_loc(current_Features[idxCF]))
                     X_trainR = X_train[:, indexes4X]
-                    X_validR = X_valid[:, indexes4X]
+                    X_testR = X_TEST[:, indexes4X]
                     
                     
-
                     operation_counter = operation_counter+1
                     if PROGRESS_BAR:
                         print('Progresion in training: '+str( round((operation_counter/number_operations)*100) )+'%, the time is: ', end='')  
@@ -238,7 +243,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                         # breakpoint()
                     model.fit(X_trainR, y_train)
                     ALL_TRAINED_MODELS.append(model)
-                    prediction = model.predict(X_validR)
+                    prediction = model.predict(X_testR)
                     
                     # define values in case we dont estimeate them (continues case 4 example)
                     accurecy = np.nan
@@ -253,7 +258,7 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
                     if TARGET_TY == 'boolean' or TARGET_TY == 'classes':
                         classes_of_target = np.unique(y)
-                        CoMtx = confusion_matrix(y_valid, prediction, labels=list(classes_of_target))  #ADD LABELS TO MATRIX (MAKE IT DF)
+                        CoMtx = confusion_matrix(Y_TEST, prediction, labels=list(classes_of_target))  #ADD LABELS TO MATRIX (MAKE IT DF)
                         accurecy = np.sum(np.diag(CoMtx))/len(prediction)
                         accurecy = accurecy*100
                         if TARGET_TY == 'boolean':
@@ -266,25 +271,38 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
                             Specifity = (1-Specifity)*100
                             F1 = 2*(accurecy*Recall)/((accurecy+Recall))
                             # breakpoint()
-                            metrics_result = auxiliary_fun.computemetrics(model, X_validR, y_valid)
+                            metrics_result = auxiliary_fun.computemetrics(model, X_testR, Y_TEST)
                             tpr = metrics_result['roc_curve'][1]
                             fpr = metrics_result['roc_curve'][0]
                             auc = metrics_result['roc_curve'][2]
 
                             ### brier score loss ###
-                            prediction_proba = model.predict_proba(X_validR)
+                            prediction_proba = model.predict_proba(X_testR)
                             prediction_proba_positive_clase = prediction_proba[:,1] 
-                            brier_score = brier_score_loss(y_valid, prediction_proba_positive_clase)
+                            brier_score = brier_score_loss(Y_TEST, prediction_proba_positive_clase)
                     model_return.loc[len(model_return.index)] = [TARGET_COLUMN, TARGET_TY, model_name, 
-                                                                 Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features, 
+                                                                 Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features, importances, 
                                                                  number_of_splits, shift_idx, CoMtx, 
-                                                                 tpr, fpr, Recall, F1, auc, model.score(X_validR, y_valid), brier_score] 
-                    breakpoint()
+                                                                 tpr, fpr, Recall, F1, auc, model.score(X_testR, Y_TEST), brier_score] 
+        # breakpoint()
 
 
 
 
+    scores_models = pd.DataFrame(columns = ['Model', 'Feature method','Feature used', 'Importances', 'Score', 'Standard deviation' ])
 
+    for model_nm in model_stack:
+        for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
+            # model_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'importances', 'Score', 'Cross-validation ID']]
+
+            feat_used = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')['Features used'].to_list()[0]
+            imp_used = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')['importances'].to_list()[0]
+            mean_val = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')['Score'].mean()
+            std_val = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')['Score'].std()
+            
+            scores_models.loc[len(scores_models.index)] = [model_nm, feature_nm, feat_used, imp_used, mean_val, std_val] 
+            # breakpoint()
+    breakpoint()
 
 ##########################################################################
 
@@ -301,10 +319,6 @@ def model_shake(DATA, TARGET_COLUMN, TARGET_TY, Fast = True):
 
 
 
-
-
-
-    breakpoint()
     
 
     feature_data = pd.DataFrame([]) 
