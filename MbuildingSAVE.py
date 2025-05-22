@@ -56,7 +56,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     number_operations = len(FEATURE_FLAGS)*(number_of_splits)*len(model_stack)*len(NORM_FLAGS)
 
 
-    # DATA = DATA.iloc[0:100] ####test CV
+    DATA = DATA.iloc[0:100] ####test CV
 
     X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
     y = DATA[TARGET_COLUMN]
@@ -79,7 +79,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     X_frag1, X_frag2, y_frag1, y_frag2 = train_test_split(X, y, test_size=0.3, shuffle = True)
     X = np.append(X_frag1, X_frag2, axis=0)
     y = np.append(y_frag1, y_frag2, axis=0)
-    # X[:, 0] = np.arange(1, 101) ####test CV 
+    X[:, 0] = np.arange(1, 101) ####test CV 
 
 ##########################################################################
 
@@ -168,7 +168,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
 
     # SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
     # breakpoint()
-    Feat_best_set = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method', 'Best set', 'Importances Custom'])
+    Feat_best_set = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method', 'Best set', 'Importances', 'Score' ])
 
     #all features
     # all_features = []
@@ -204,11 +204,11 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
                 # feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')[['Features used', 'Normalization method','importances', 'Score']]
                 # best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
                 # breakpoint()
-                # best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
+                best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
                 # best_set_importances = feat_n_score.sort_values(by='Score').iloc[-1]['importances']
 
-                Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, Normalization_methods[normFlag_nm],feature_nm, best_set, best_set_importances] 
-                # breakpoint()
+                Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, Normalization_methods[normFlag_nm],feature_nm, best_set, best_set_importances, best_set_score] 
+                breakpoint()
 
     print('\n\n\n END OF FIRST CV WITH FS')
     breakpoint()
@@ -237,7 +237,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
                 print('     model '+str(model_name))
 
                 current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Best set'].values.tolist()[0]
-                importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Importances Custom'].values[0]
+                importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Importances'].values[0]
 
                 indexes4X = []
                 for idxCF in range(len(current_Features)):
