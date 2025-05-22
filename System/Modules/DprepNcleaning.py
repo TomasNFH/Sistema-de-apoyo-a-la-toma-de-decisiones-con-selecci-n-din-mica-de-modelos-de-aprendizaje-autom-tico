@@ -58,8 +58,8 @@ def data_normF(data, FLAG=1):
         #     data_norm.insert(len(data.columns)-1, col, X_norm_arr[:,idx], True)
         
     
-    print(pd.DataFrame(data).describe())
-    print(pd.DataFrame(data_norm).describe())
-    breakpoint()
+    # print(pd.DataFrame(data).describe())
+    # print(pd.DataFrame(data_norm).describe())
+    # breakpoint()
     return data_norm
 

@@ -96,24 +96,30 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
         X = np.roll(X, samples_of_valid, axis=0)
         y = np.roll(y, samples_of_valid, axis=0)
 
-        ### Step 1: Feature Engeeniring ###
-        for F_FLAG in FEATURE_FLAGS:
-            print('    F_flag '+str(Feature_methods[F_FLAG]))
-            X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
-                                                pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
-                                                N_features=FEATURE_N, 
-                                                FLAG=F_FLAG) 
-            X_validR = X_valid[:, indexes4valid]
+        ### Step 4: NORMALIZATION ###
+        for N_FLAG in NORM_FLAGS:
+            print('    normalization '+str(N_FLAG))
+            X_trainN = DprepNcleaning.data_normF(X_train, FLAG=N_FLAG) 
+            X_validN = DprepNcleaning.data_normF(X_valid, FLAG=N_FLAG) 
 
-            ### Step 3: Model selection ###
-            for model_name in model_stack:
-                print('     model '+str(model_name))
+            ### Step 1: Feature Engeeniring ###
+            for F_FLAG in FEATURE_FLAGS:
+                print('        F_flag '+str(Feature_methods[F_FLAG]))
+                X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_trainN, columns = columns_X), 
+                                                    pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
+                                                    N_features=FEATURE_N, 
+                                                    FLAG=F_FLAG) 
+                X_validR = X_validN[:, indexes4valid]
 
-                ### Step 4: NORMALIZATION ###
-                for N_FLAG in NORM_FLAGS:
-                    print('         normalization '+str(N_FLAG))
-                    X_trainR = DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
-                    X_validR = DprepNcleaning.data_normF(X_validR, FLAG=N_FLAG) #arreglar 
+                ### Step 3: Model selection ###
+                for model_name in model_stack:
+                    print('             model '+str(model_name))
+
+                    # ### Step 4: NORMALIZATION ###
+                    # for N_FLAG in NORM_FLAGS:
+                    #     print('         normalization '+str(N_FLAG))
+                    #     X_trainR = DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
+                    #     X_validR = DprepNcleaning.data_normF(X_validR, FLAG=N_FLAG) #arreglar 
 
                     ### Step 5: Model Building 
                     model = auxiliary_fun.model_dashboard(model_name)
@@ -161,18 +167,21 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     
 
     # SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
-
-    Feat_best_set = pd.DataFrame(columns = ['Model', 'Feature method', 'Best set', 'Importances', 'Score' ])
+    # breakpoint()
+    Feat_best_set = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method', 'Best set', 'Importances', 'Score' ])
 
     for model_nm in model_stack:
         for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
-            feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'importances', 'Score']]
-            best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
-            best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
-            best_set_importances = feat_n_score.sort_values(by='Score').iloc[-1]['importances']
+            for normFlag_nm in NORM_FLAGS:
+                # Normalization_methods
+                # breakpoint()
+                feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')[['Features used', 'Normalization method','importances', 'Score']]
+                best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
+                best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
+                best_set_importances = feat_n_score.sort_values(by='Score').iloc[-1]['importances']
 
-            Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, feature_nm, best_set, best_set_importances, best_set_score] 
-            
+                Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, Normalization_methods[normFlag_nm],feature_nm, best_set, best_set_importances, best_set_score] 
+                
 
     print('\n\n\n END OF FIRST CV WITH FS')
     breakpoint()
@@ -192,31 +201,30 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
         X = np.roll(X, samples_of_valid, axis=0)
         y = np.roll(y, samples_of_valid, axis=0)
 
-        ### Step 1: Feature Engeeniring ###
-        # IMPORTANCES_OUT = [] #al final solo queda para el ultimo cv
-        # CURRENT_FEATURES_OUT = []
-        ALL_TRAINED_MODELS = []
-        for F_FLAG in FEATURE_FLAGS:
-            print('    F_flag '+str(Feature_methods[F_FLAG]))
-            # breakpoint()
-            # X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
-            #                                     pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
-            #                                     N_features=FEATURE_N, 
-            #                                     FLAG=F_FLAG) 
-            # X_validR = X_valid[:, indexes4valid]
-            # IMPORTANCES_OUT.append(importances)
-            # CURRENT_FEATURES_OUT.append(current_Features) #doesnt represent all features
+        ### Step 4: NORMALIZATION ###
+        for N_FLAG in NORM_FLAGS:
+            print('    normalization '+str(N_FLAG))
+            X_trainN = DprepNcleaning.data_normF(X_train, FLAG=N_FLAG) 
+            X_testN = DprepNcleaning.data_normF(X_TEST, FLAG=N_FLAG) 
 
-            ### Step 3: Model selection ###
-            for model_name in model_stack:
-                print('     model '+str(model_name))
+            ### Step 1: Feature Engeeniring ###
+            for F_FLAG in FEATURE_FLAGS:
+                print('    F_flag '+str(Feature_methods[F_FLAG]))
+                # breakpoint()
+                # X_trainR, current_Features, importances, indexes4valid = Fselection.F_selector(pd.DataFrame(X_train, columns = columns_X), 
+                #                                     pd.DataFrame(y_train, columns = [TARGET_COLUMN]), 
+                #                                     N_features=FEATURE_N, 
+                #                                     FLAG=F_FLAG) 
+                # X_validR = X_valid[:, indexes4valid]
+                # IMPORTANCES_OUT.append(importances)
+                # CURRENT_FEATURES_OUT.append(current_Features) #doesnt represent all features
 
-                ### Step 4: NORMALIZATION ###
-                for N_FLAG in NORM_FLAGS:
-                    print('         normalization '+str(N_FLAG))
-                    # DprepNcleaning.data_normF(X_trainR, FLAG=N_FLAG) #arreglar 
-                    current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG]')['Best set'].values.tolist()[0]
-                    importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@N_FLAG]')['Importances'].values[0]
+                ### Step 3: Model selection ###
+                for model_name in model_stack:
+                    print('     model '+str(model_name))
+
+                    current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Best set'].values.tolist()[0]
+                    importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Importances'].values[0]
                     
                     # IMPORTANCES_OUT.append(importances)
                     # CURRENT_FEATURES_OUT.append(current_Features)
@@ -225,7 +233,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
                     for idxCF in range(len(current_Features)):
                         indexes4X.append(DATA.loc[:, DATA.columns != TARGET_COLUMN].columns.get_loc(current_Features[idxCF]))
                     X_trainR = X_train[:, indexes4X]
-                    X_testR = X_TEST[:, indexes4X]
+                    X_testR = X_testN[:, indexes4X]
                     
                     
                     operation_counter = operation_counter+1
@@ -242,7 +250,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
                     # if F_FLAG==2:
                         # breakpoint()
                     model.fit(X_trainR, y_train)
-                    ALL_TRAINED_MODELS.append(model)
+                    # ALL_TRAINED_MODELS.append(model)
                     prediction = model.predict(X_testR)
                     
                     # define values in case we dont estimeate them (continues case 4 example)
@@ -289,19 +297,20 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
 
 
 
-    scores_models = pd.DataFrame(columns = ['Model', 'Feature method','Feature used', 'Importances', 'Score', 'Standard deviation' ])
+    scores_models = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method','Feature used', 'Importances', 'Score', 'Standard deviation' ])
 
     for model_nm in model_stack:
         for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
-            # model_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'importances', 'Score', 'Cross-validation ID']]
-
-            feat_used = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')['Features used'].to_list()[0]
-            imp_used = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')['importances'].to_list()[0]
-            mean_val = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')['Score'].mean()
-            std_val = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')['Score'].std()
-            
-            scores_models.loc[len(scores_models.index)] = [model_nm, feature_nm, feat_used, imp_used, mean_val, std_val] 
-            # breakpoint()
+            for normFlag_nm in NORM_FLAGS:
+                # model_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm')[['Features used', 'importances', 'Score', 'Cross-validation ID']]
+                # breakpoint()
+                feat_used = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')['Features used'].to_list()[0]
+                imp_used = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')['importances'].to_list()[0]
+                mean_val = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')['Score'].mean()
+                std_val = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')['Score'].std()
+                
+                scores_models.loc[len(scores_models.index)] = [model_nm, Normalization_methods[normFlag_nm], feature_nm, feat_used, imp_used, mean_val, std_val] 
+                # breakpoint()
     breakpoint()
 
 ##########################################################################
