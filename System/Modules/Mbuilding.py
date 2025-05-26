@@ -235,15 +235,17 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
             ### Step 3: Model selection ###
             for model_name in model_stack:
                 print('     model '+str(model_name))
-
+                breakpoint()
                 current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Best set'].values.tolist()[0]
                 importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Importances Custom'].values[0]
 
                 indexes4X = []
                 for idxCF in range(len(current_Features)):
                     indexes4X.append(DATA.loc[:, DATA.columns != TARGET_COLUMN].columns.get_loc(current_Features[idxCF]))
+                
                 X_trainR = X_train[:, indexes4X]
                 X_testR = X_testN[:, indexes4X]
+
                 
                 
                 operation_counter = operation_counter+1
