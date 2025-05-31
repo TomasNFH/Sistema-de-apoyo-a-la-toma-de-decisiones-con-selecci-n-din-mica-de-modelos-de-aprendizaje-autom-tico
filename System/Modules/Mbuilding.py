@@ -148,36 +148,6 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
                 Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, Normalization_methods[normFlag_nm],feature_nm, best_set, best_set_importances, best_set_score] 
 
 
-    # # 2 SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
-    # Feat_best_set = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method', 'Best set', 'Importances Custom'])
-
-    # for model_nm in model_stack:
-    #     for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
-    #         for normFlag_nm in NORM_FLAGS:
-    #             feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')[['Features used', 'Normalization method','importances', 'Score']]
-                
-    #             all_features = []
-    #             for f_list in feat_n_score['Features used'].values:
-    #                 all_features = all_features+f_list
-    #             feature_imp_sum = pd.DataFrame(columns=pd.DataFrame(all_features)[0].unique())
-    #             feature_imp_sum.loc[len(feature_imp_sum)] = np.zeros(len(feature_imp_sum.columns))
-
-    #             #select best set by Score and importances
-    #             for index, row in feat_n_score[['Features used', 'importances', 'Score']].iterrows():
-    #                 for idx in range(number_of_splits):
-    #                     # breakpoint()
-    #                     Feat = row['Features used'][idx]
-    #                     Imp = row['importances'][idx]
-    #                     Scr = row['Score']
-    #                     feature_imp_sum.loc[0, Feat] += Scr*Imp
-
-    #             best_set = feature_imp_sum.transpose().sort_values(by=0).iloc[-5:].index
-    #             best_set_importances = feature_imp_sum.transpose().sort_values(by=0).iloc[-5:].values
-    #             Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, Normalization_methods[normFlag_nm],feature_nm, best_set, best_set_importances] 
-
-
-    print('\n\n\n END OF FIRST CV WITH FS')
-    breakpoint()
 ##########################################################################333333
     
     # NO CV for modeling and validation -> (we use valid and train) as train and we validate with test 
@@ -264,12 +234,6 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
                         tpr = metrics_result['roc_curve'][1]
                         fpr = metrics_result['roc_curve'][0]
                         auc = metrics_result['roc_curve'][2]
-                        # from sklearn.metrics import RocCurveDisplay
-                        # from sklearn import metrics
-                        # metrics.confusion_matrix
-                        # fpr, tpr, thresholds = metrics.roc_curve(y_valid, model.predict_proba(X_validR)[:,1])
-                        # auc = metrics.auc(fpr, tpr)
-                        # RocCurveDisplay.from_predictions(y_valid, model.predict_proba(X_validR)[:,1]) #plt figure
 
                         ### brier score loss ###
                         prediction_proba = model.predict_proba(X_testR)
@@ -279,118 +243,46 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
                                                              Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features, importances, 
                                                              number_of_splits, shift_idx, CoMtx, 
                                                              tpr, fpr, Recall, F1, auc, model.score(X_testR, Y_TEST), brier_score] 
-    # breakpoint()
-
-    # scores_models = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method','Feature used', 'Importances', 'Score' ])
-
-    # for model_nm in model_stack:
-    #     for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
-    #         for normFlag_nm in NORM_FLAGS:
-    #             feat_used = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')['Features used'].to_list()[0]
-    #             imp_used = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')['importances'].to_list()[0]
-    #             score_rt = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')['Score']
-                
-    #             scores_models.loc[len(scores_models.index)] = [model_nm, Normalization_methods[normFlag_nm], feature_nm, feat_used, imp_used, score_rt] 
-    
-
 
 
     feature_data = model_return.loc[model_return.groupby('Model name')['Score'].idxmax()][['Model name', 'Feature selection method', 'Normalization method', 'Features used', 'importances']]
-    # feature_data = pd.DataFrame(columns = ['Feature method', 'Feature', 'Score' ])
-    # for model_nm in model_stack:
-        # for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
-            # for normFlag_nm in Normalization_methods:
-            # Feature method        Feature     Score
-
-
-    # fig_features, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(3, 2)
-    # ax1.bar(feature_data[feature_data['Feature method']==Feature_methods[0]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[0]]['Score'], color=colors_plot[0])
-
-
-
-
-
-    # fig_features, axs = plt.subplots(3, 2, figsize=(12, 10))
-    # ax1, ax2, ax3, ax4, ax5, ax6 = axs.flatten()
-
-    # ax1.bar(feature_data.iloc[0]['Features used'], feature_data.iloc[0]['importances'])
-    # ax2.bar(feature_data.iloc[1]['Features used'], feature_data.iloc[1]['importances'])
-    # ax3.bar(feature_data.iloc[2]['Features used'], feature_data.iloc[2]['importances'])
-    # ax4.bar(feature_data.iloc[3]['Features used'], feature_data.iloc[3]['importances'])
-    # ax5.bar(feature_data.iloc[4]['Features used'], feature_data.iloc[4]['importances'])
-    # ax6.bar(feature_data.iloc[5]['Features used'], feature_data.iloc[5]['importances'])
-
-
-
-
-
-
     number_of_models = len(model_stack)  # or any other number
-
     nrows = 2 if number_of_models > 3 else 1
     ncols = math.ceil(number_of_models / nrows)
 
     fig_features, axs = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4 * nrows))
-
-
-
-
-
-    # fig_features, axs = plt.subplots(3, 2, figsize=(14, 10))  # or any size you want
     axs = axs.flatten()  # Flatten to get a list: [ax1, ax2, ..., ax6]
 
     for i, ax in enumerate(axs):
         current_model = feature_data.iloc[i]
-        ax.bar(current_model['Features used'], current_model['importances'])
-        ax.set_title(current_model['Model name'])
-        ax.set_xticklabels(features, rotation=45, ha='right')
+        features = current_model['Features used']
 
+        # Plot bar
+        ax.bar(features, current_model['importances'])
 
+        # Title 
+        ax.set_title(current_model['Model name'], pad=15, fontsize=12, weight='bold')
+
+        # Legend
+        legend_text = (
+            f"NM: {current_model['Normalization method']}, "
+            f"FM: {current_model['Feature selection method']}"
+        )
+        ax.legend([legend_text], loc='upper left', fontsize=9)
+
+        ax.set_xticks(range(len(features)))
+        ax.set_xticklabels(features, rotation=25, ha='right', fontsize=10)
+
+        # Y-axis range
+        ax.set_ylim(0, 1)
+        ax.set_ylabel("Importance", fontsize=10)
+
+    fig_features.tight_layout(pad=3.5)
     plt.savefig('features.png')
 
     breakpoint()
 
 ##########################################################################
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-    
-
-    feature_data = pd.DataFrame([]) 
-    Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
-    for idx in range(len(IMPORTANCES_OUT)):
-        list_of_tuples = list(zip(CURRENT_FEATURES_OUT[idx], IMPORTANCES_OUT[idx]))
-        aux = pd.DataFrame(list_of_tuples, columns=['Feature', 'Score'])
-        aux.insert(0, 'Feature method', Feature_methods[idx]) 
-        feature_data = pd.concat([feature_data,aux],ignore_index=True) 
-  
-    
-    if Fast == False:
-        fig_features, (ax1, ax2, RandomForestClassifierax3) = plt.subplots(3, 1)
-        ax3.bar(feature_data[feature_data['Feature method']==Feature_methods[2]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[2]]['Score'], color=colors_plot[0])
-        ax3.set_ylim(0, 1)
-    else: fig_features, (ax1, ax2) = plt.subplots(2, 1)
-
-    ax1.bar(feature_data[feature_data['Feature method']==Feature_methods[0]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[0]]['Score'], color=colors_plot[0])
-    ax1.set_ylim(0, 1)
-    ax2.bar(feature_data[feature_data['Feature method']==Feature_methods[1]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[1]]['Score'], color = colors_plot[0])
-    ax2.set_ylim(0, 1)
-    plt.draw()
-    ax1.set_xticklabels(ax1.get_xticklabels(), rotation=30, ha='right')
-    ax2.set_xticklabels(ax2.get_xticklabels(), rotation=30, ha='right')
-    plt.tight_layout()
-    fig_features.tight_layout()   
 
 
     if TARGET_TY == 'boolean':
