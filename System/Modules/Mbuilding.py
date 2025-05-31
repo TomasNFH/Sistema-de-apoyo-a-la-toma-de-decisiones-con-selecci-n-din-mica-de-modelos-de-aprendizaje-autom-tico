@@ -4,7 +4,7 @@ import pandas as pd
 from System.Modules import DprepNcleaning
 from sklearn.model_selection import train_test_split
 from System.Auxiliary import auxiliary_fun
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, brier_score_loss
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, RocCurveDisplay, brier_score_loss
 from termcolor import colored
 import matplotlib.pyplot as plt 
 import seaborn as sns
@@ -244,17 +244,18 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
                                                              number_of_splits, shift_idx, CoMtx, 
                                                              tpr, fpr, Recall, F1, auc, model.score(X_testR, Y_TEST), brier_score] 
 
-
-    feature_data = model_return.loc[model_return.groupby('Model name')['Score'].idxmax()][['Model name', 'Feature selection method', 'Normalization method', 'Features used', 'importances']]
+    best_model_res = model_return.loc[model_return.groupby('Model name')['Score'].idxmax()]
+    # feature_data = model_return.loc[model_return.groupby('Model name')['Score'].idxmax()][['Model name', 'Feature selection method', 'Normalization method', 'Features used', 'importances']]
     number_of_models = len(model_stack)  # or any other number
     nrows = 2 if number_of_models > 3 else 1
     ncols = math.ceil(number_of_models / nrows)
+
 
     fig_features, axs = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4 * nrows))
     axs = axs.flatten()  # Flatten to get a list: [ax1, ax2, ..., ax6]
 
     for i, ax in enumerate(axs):
-        current_model = feature_data.iloc[i]
+        current_model = best_model_res.iloc[i]
         features = current_model['Features used']
 
         # Plot bar
@@ -287,62 +288,102 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
 
     if TARGET_TY == 'boolean':
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
-        print(colored(model_return[['Target column', 'Target type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'True Positive Rate', 'False Positive Rate', 'Recall', 'F1 score', 'Score', 'Brier score loss']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
+        print(colored(best_model_res[['Model name', 'Normalization method', 'Feature selection method', 'True Positive Rate', 'False Positive Rate', 'AUC', 'Brier score loss']], 'green'))
+ 
+        fig_CM, axs = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4 * nrows))
+        axs = axs.flatten()
 
-        print(colored('\nThe results for the best model (based in Score):', 'green', attrs=['bold']))
-        MAX_idx = model_return['Score'].idxmax()
-        best_model_res = model_return.iloc[MAX_idx]
+        for i, ax in enumerate(axs[:number_of_models]):
+            current_model = best_model_res.iloc[i]
+            cm = current_model['Confusion matrix']
+            
+            # ConfusionMatrix plot
+            disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=list(classes_of_target))
+            disp.plot(ax=ax, colorbar=False) 
+            # ax.set_title(current_model['Model name']) 
 
-        model_idx = 0
-        fig_CM, axes = plt.subplots(1, len(model_return['Model name'].unique()), sharey='row')
-        max_curves_per_model = 1
-        number_of_models = len(model_return['Model name'].unique())
-        grouped_by_model = model_return.groupby('Model name')
-        for model_name_loop in model_return['Model name'].unique():
-            curve_id = 0
-            current_model_data = grouped_by_model.get_group(model_name_loop)
-            current_model_data = current_model_data.sort_values(by=['AUC','Score','F1 score'], ascending=False)
-            for index, row in current_model_data.iterrows():
-                if curve_id < max_curves_per_model:
+            # Title 
+            ax.set_title(current_model['Model name'], pad=15, fontsize=12, weight='bold')
 
-                    disp = ConfusionMatrixDisplay(row['Confusion matrix'],
-                                                display_labels=list(classes_of_target))
-                    disp.plot(ax=axes[model_idx], xticks_rotation=45)
-                    disp.ax_.set_title(model_name_loop, rotation = 15)
-                    disp.im_.colorbar.remove()
-                    disp.ax_.set_xlabel('')
+        # plt.tight_layout()
+        fig_CM.tight_layout(pad=3.5)
+        plt.savefig('CM.png')
+
+ 
+        fig_ROC, axs = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4 * nrows))
+        axs = axs.flatten()
+
+        for i, ax in enumerate(axs[:number_of_models]):
+            current_model = best_model_res.iloc[i]
+            [fpr, tpr, roc_auc] = current_model[['False Positive Rate', 'True Positive Rate', 'AUC']]
+            
+            # ConfusionMatrix plot
+            disp = RocCurveDisplay(fpr=fpr, tpr=tpr, roc_auc=roc_auc)
+            disp.plot(ax=ax) 
+
+            # Title 
+            ax.set_title(current_model['Model name'], pad=15, fontsize=12, weight='bold')
 
 
-                curve_id = curve_id+1
-            model_idx = model_idx+1
-        plt.tight_layout()
+        # plt.tight_layout()
+        fig_ROC.tight_layout(pad=3.5)
+        plt.savefig('ROC.png')
 
-        number_of_models = len(model_return['Model name'].unique())
-        grouped_by_model = model_return.groupby('Model name')
 
-        fig_ROC = plt.figure()
-        model_idx = 0
-        max_curves_per_model = 1
-        # breakpoint()
-        for model_name_loop in model_return['Model name'].unique():
-            curve_id = 0
-            current_model_data = grouped_by_model.get_group(model_name_loop)
-            current_model_data = current_model_data.sort_values(by=['AUC','Score','F1 score'], ascending=False)
-            for index, row in current_model_data.iterrows():
-                if curve_id < max_curves_per_model:
-                    plt.subplot(2,3,model_idx+1)
-                    plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row["AUC"]:.2f})', color=colors_plot[0])
-                    plt.plot([0, 1], [0, 1], color=colors_plot[1], lw=2, linestyle='--')
-                    plt.xlim([0.0, 1.0])
-                    plt.ylim([0.0, 1.05])
-                    plt.xlabel('False Positive R.')
-                    if model_idx == 0:
-                        plt.ylabel('True Positive Rate')
-                    plt.title(f'{row["Model name"]}', rotation=0)
-                    plt.legend(loc="lower right")
-                curve_id = curve_id+1
-            model_idx = model_idx+1
-        plt.tight_layout()
+        # print(colored('\nThe results for the best model (based in Score):', 'green', attrs=['bold']))
+        # MAX_idx = model_return['Score'].idxmax()
+        # best_model_res = model_return.iloc[MAX_idx]
+
+        # model_idx = 0
+        # fig_CM, axes = plt.subplots(1, len(model_return['Model name'].unique()), sharey='row')
+        # max_curves_per_model = 1
+        # number_of_models = len(model_return['Model name'].unique())
+        # grouped_by_model = model_return.groupby('Model name')
+        # for model_name_loop in model_return['Model name'].unique():
+        #     curve_id = 0
+        #     current_model_data = grouped_by_model.get_group(model_name_loop)
+        #     current_model_data = current_model_data.sort_values(by=['AUC','Score','F1 score'], ascending=False)
+        #     for index, row in current_model_data.iterrows():
+        #         if curve_id < max_curves_per_model:
+
+        #             disp = ConfusionMatrixDisplay(row['Confusion matrix'],
+        #                                         display_labels=list(classes_of_target))
+        #             disp.plot(ax=axes[model_idx], xticks_rotation=45)
+        #             disp.ax_.set_title(model_name_loop, rotation = 15)
+        #             disp.im_.colorbar.remove()
+        #             disp.ax_.set_xlabel('')
+
+
+        #         curve_id = curve_id+1
+        #     model_idx = model_idx+1
+        # plt.tight_layout()
+
+        # number_of_models = len(model_return['Model name'].unique())
+        # grouped_by_model = model_return.groupby('Model name')
+
+        # fig_ROC = plt.figure()
+        # model_idx = 0
+        # max_curves_per_model = 1
+        # # breakpoint()
+        # for model_name_loop in model_return['Model name'].unique():
+        #     curve_id = 0
+        #     current_model_data = grouped_by_model.get_group(model_name_loop)
+        #     current_model_data = current_model_data.sort_values(by=['AUC','Score','F1 score'], ascending=False)
+        #     for index, row in current_model_data.iterrows():
+        #         if curve_id < max_curves_per_model:
+        #             plt.subplot(2,3,model_idx+1)
+        #             plt.plot(row['False Positive Rate'], row['True Positive Rate'], lw=2, label=f'(AUC={row["AUC"]:.2f})', color=colors_plot[0])
+        #             plt.plot([0, 1], [0, 1], color=colors_plot[1], lw=2, linestyle='--')
+        #             plt.xlim([0.0, 1.0])
+        #             plt.ylim([0.0, 1.05])
+        #             plt.xlabel('False Positive R.')
+        #             if model_idx == 0:
+        #                 plt.ylabel('True Positive Rate')
+        #             plt.title(f'{row["Model name"]}', rotation=0)
+        #             plt.legend(loc="lower right")
+        #         curve_id = curve_id+1
+        #     model_idx = model_idx+1
+        # plt.tight_layout()
 
     if TARGET_TY == 'classes':
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
@@ -356,7 +397,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
         print(colored('\nTable with information of scores of the models:', 'green', attrs=['bold']))
         print(colored(model_return[['Target column', 'Target type', 'Model name', 'Normalization method', 'Feature selection method', 'Number of splits', 'Score']].sort_values(by=['Score'], ascending=False).head(20), 'green'))
 
-
+    ALL_TRAINED_MODELS = []
     return model_return, ALL_TRAINED_MODELS, fig_features, fig_ROC, fig_CM
 
 

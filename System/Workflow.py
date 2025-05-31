@@ -46,7 +46,7 @@ def dyn_model_selection(data = pd.DataFrame(), file_selected=-1, column_selected
     X_data, X_test, y_data, y_test = train_test_split(X, y, test_size=0.1, shuffle = True)
     data = pd.concat([y_data, X_data], axis=1)
 
-    model_info, trained_models, fig1, fig2, fig3 = Mbuilding.model_shake(DATA=data, X_TEST=X_test.to_numpy(),  Y_TEST=y_test.to_numpy(), TARGET_COLUMN=target_column, TARGET_TY=target_type, Fast = FAST)
+    model_info, _, fig1, fig2, fig3 = Mbuilding.model_shake(DATA=data, X_TEST=X_test.to_numpy(),  Y_TEST=y_test.to_numpy(), TARGET_COLUMN=target_column, TARGET_TY=target_type, Fast = FAST)
     model_info = model_info.rename(columns={'Normalization method': 'NM', 'Feature selection method': 'FSM'})
     sns.lmplot(
         data=model_info, x="Cross-validation ID", y="Score", row="NM", col="FSM", hue='Model name',
