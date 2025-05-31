@@ -11,6 +11,7 @@ import seaborn as sns
 from sklearn.utils import resample
 from alive_progress import alive_bar
 import time
+import math
 
 
 def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
@@ -168,7 +169,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     #                     Feat = row['Features used'][idx]
     #                     Imp = row['importances'][idx]
     #                     Scr = row['Score']
-    #                     feature_imp_sum.loc[0, Feat] =+ Scr*Imp
+    #                     feature_imp_sum.loc[0, Feat] += Scr*Imp
 
     #             best_set = feature_imp_sum.transpose().sort_values(by=0).iloc[-5:].index
     #             best_set_importances = feature_imp_sum.transpose().sort_values(by=0).iloc[-5:].values
@@ -259,14 +260,15 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
                         Specifity = (1-Specifity)*100
                         F1 = 2*(accurecy*Recall)/((accurecy+Recall))
 
-                        # metrics_result = auxiliary_fun.computemetrics(model, X_testR, Y_TEST)
-                        # tpr = metrics_result['roc_curve'][1]
-                        # fpr = metrics_result['roc_curve'][0]
-                        # auc = metrics_result['roc_curve'][2]
-                        from sklearn.metrics import RocCurveDisplay
-                        from sklearn import metrics
-                        fpr, tpr, thresholds = metrics.roc_curve(y_valid, model.predict_proba(X_validR)[:,1])
-                        auc = metrics.auc(fpr, tpr)
+                        metrics_result = auxiliary_fun.computemetrics(model, X_testR, Y_TEST)
+                        tpr = metrics_result['roc_curve'][1]
+                        fpr = metrics_result['roc_curve'][0]
+                        auc = metrics_result['roc_curve'][2]
+                        # from sklearn.metrics import RocCurveDisplay
+                        # from sklearn import metrics
+                        # metrics.confusion_matrix
+                        # fpr, tpr, thresholds = metrics.roc_curve(y_valid, model.predict_proba(X_validR)[:,1])
+                        # auc = metrics.auc(fpr, tpr)
                         # RocCurveDisplay.from_predictions(y_valid, model.predict_proba(X_validR)[:,1]) #plt figure
 
                         ### brier score loss ###
@@ -289,13 +291,70 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     #             score_rt = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')['Score']
                 
     #             scores_models.loc[len(scores_models.index)] = [model_nm, Normalization_methods[normFlag_nm], feature_nm, feat_used, imp_used, score_rt] 
+    
+
+
+
+    feature_data = model_return.loc[model_return.groupby('Model name')['Score'].idxmax()][['Model name', 'Feature selection method', 'Normalization method', 'Features used', 'importances']]
+    # feature_data = pd.DataFrame(columns = ['Feature method', 'Feature', 'Score' ])
+    # for model_nm in model_stack:
+        # for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
+            # for normFlag_nm in Normalization_methods:
+            # Feature method        Feature     Score
+
+
+    # fig_features, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(3, 2)
+    # ax1.bar(feature_data[feature_data['Feature method']==Feature_methods[0]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[0]]['Score'], color=colors_plot[0])
+
+
+
+
+
+    # fig_features, axs = plt.subplots(3, 2, figsize=(12, 10))
+    # ax1, ax2, ax3, ax4, ax5, ax6 = axs.flatten()
+
+    # ax1.bar(feature_data.iloc[0]['Features used'], feature_data.iloc[0]['importances'])
+    # ax2.bar(feature_data.iloc[1]['Features used'], feature_data.iloc[1]['importances'])
+    # ax3.bar(feature_data.iloc[2]['Features used'], feature_data.iloc[2]['importances'])
+    # ax4.bar(feature_data.iloc[3]['Features used'], feature_data.iloc[3]['importances'])
+    # ax5.bar(feature_data.iloc[4]['Features used'], feature_data.iloc[4]['importances'])
+    # ax6.bar(feature_data.iloc[5]['Features used'], feature_data.iloc[5]['importances'])
+
+
+
+
+
+
+    number_of_models = len(model_stack)  # or any other number
+
+    nrows = 2 if number_of_models > 3 else 1
+    ncols = math.ceil(number_of_models / nrows)
+
+    fig_features, axs = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4 * nrows))
+
+
+
+
+
+    # fig_features, axs = plt.subplots(3, 2, figsize=(14, 10))  # or any size you want
+    axs = axs.flatten()  # Flatten to get a list: [ax1, ax2, ..., ax6]
+
+    for i, ax in enumerate(axs):
+        current_model = feature_data.iloc[i]
+        ax.bar(current_model['Features used'], current_model['importances'])
+        ax.set_title(current_model['Model name'])
+        ax.set_xticklabels(features, rotation=45, ha='right')
+
+
+    plt.savefig('features.png')
+
     breakpoint()
 
 ##########################################################################
 
 
 
-
+    
 
 
 
