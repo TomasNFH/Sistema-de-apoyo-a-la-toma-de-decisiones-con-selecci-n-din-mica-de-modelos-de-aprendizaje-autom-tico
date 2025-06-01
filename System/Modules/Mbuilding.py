@@ -35,23 +35,9 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     if Fast:
         FEATURE_FLAGS = np.array([0,1])
 
-<<<<<<< HEAD
-    if TARGET_TY == 'boolean':
-        model_stack = ['RandomForestClassifier', 'LogisticRegression', 'KNeighborsClassifier', 'SupportVectorClassification', 'GradientBoostingClassifier', 'GaussianNB']
-        # NORM_FLAGS = np.array([0])
-    if TARGET_TY == 'classes':
-        model_stack = ['RandomForestClassifier', 'KNeighborsClassifier', 'SupportVectorClassification']   
-        # NORM_FLAGS = np.array([0])
-    if TARGET_TY == 'continuous':
-        # model_stack = ['LinearRegression', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
-        model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
-
-    # NORM_FLAGS = np.array([0]) #dont use normalization just for know
-=======
     if TARGET_TY == 'boolean': model_stack = ['RandomForestClassifier', 'LogisticRegression', 'KNeighborsClassifier', 'SupportVectorClassification', 'GradientBoostingClassifier', 'GaussianNB']
     if TARGET_TY == 'classes': model_stack = ['RandomForestClassifier', 'KNeighborsClassifier', 'SupportVectorClassification']   
     if TARGET_TY == 'continuous': model_stack = ['LinearRegression', 'SupportVectorMachines', 'RandomForestRegressor','QuantileRegressor', 'GradientBoostingRegressor', 'PassiveAggressiveRegressor', 'LassoLars', 'KNeighborsRegressor'] 
->>>>>>> FS_opt
 
     Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
     Normalization_methods = ['No', 'Min-Max', 'Z-score']
@@ -59,12 +45,6 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     number_of_splits = 5
     operation_counter = 0
     number_operations = len(FEATURE_FLAGS)*(number_of_splits)*len(model_stack)*len(NORM_FLAGS) + len(FEATURE_FLAGS)*len(model_stack)*len(NORM_FLAGS)
-<<<<<<< HEAD
-
-
-    # DATA = DATA.iloc[0:100] ####test CV
-=======
->>>>>>> FS_opt
 
     X = DATA.loc[:, DATA.columns != TARGET_COLUMN]
     y = DATA[TARGET_COLUMN]
@@ -73,11 +53,6 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     ### leave one out add ###
 
 
-<<<<<<< HEAD
-    # breakpoint()
-
-=======
->>>>>>> FS_opt
     ### Bootstraping ###  
     min_number_of_samples = 50
     number_of_samples = X.shape[0]
@@ -88,23 +63,12 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     X_frag1, X_frag2, y_frag1, y_frag2 = train_test_split(X, y, test_size=0.3, shuffle = True)
     X = np.append(X_frag1, X_frag2, axis=0)
     y = np.append(y_frag1, y_frag2, axis=0)
-<<<<<<< HEAD
-    # X[:, 0] = np.arange(1, 101) ####test CV 
 
-##########################################################################
-
-
-=======
-
->>>>>>> FS_opt
     ### Step 2: Cross Validation (FIRST STEP)###   
     samples_of_valid = int(len(X)/number_of_splits)
     for shift_idx in range(number_of_splits): 
         print('\nshift_idx '+str(shift_idx))
-<<<<<<< HEAD
-=======
 
->>>>>>> FS_opt
         X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=samples_of_valid, random_state=0, shuffle = False)
         if TARGET_TY == 'classes' or TARGET_TY == 'boolean': #quick solve for HDwithCM, solve in general!!!
             y_train = y_train.astype(int)
@@ -149,261 +113,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
 
                     FS_return.loc[len(FS_return.index)] = [model_name, Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features.values.tolist(), importances, 
                                                             number_of_splits, shift_idx, model.score(X_validR, y_valid)] 
-<<<<<<< HEAD
     
-
-
-
-    # 1 SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
-    Feat_best_set = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method', 'Best set', 'Importances Custom', 'Score' ])
-
-    for model_nm in model_stack:
-        for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
-            for normFlag_nm in NORM_FLAGS:
-                feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')[['Features used', 'Normalization method','importances', 'Score']]
-                best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
-                best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
-                best_set_importances = feat_n_score.sort_values(by='Score').iloc[-1]['importances']
-
-                Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, Normalization_methods[normFlag_nm],feature_nm, best_set, best_set_importances, best_set_score] 
-
-
-    # # 2 SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
-    # Feat_best_set = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method', 'Best set', 'Importances Custom'])
-
-    # for model_nm in model_stack:
-    #     for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
-    #         for normFlag_nm in NORM_FLAGS:
-    #             feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')[['Features used', 'Normalization method','importances', 'Score']]
-                
-    #             all_features = []
-    #             for f_list in feat_n_score['Features used'].values:
-    #                 all_features = all_features+f_list
-    #             feature_imp_sum = pd.DataFrame(columns=pd.DataFrame(all_features)[0].unique())
-    #             feature_imp_sum.loc[len(feature_imp_sum)] = np.zeros(len(feature_imp_sum.columns))
-
-    #             #select best set by Score and importances
-    #             for index, row in feat_n_score[['Features used', 'importances', 'Score']].iterrows():
-    #                 for idx in range(number_of_splits):
-    #                     # breakpoint()
-    #                     Feat = row['Features used'][idx]
-    #                     Imp = row['importances'][idx]
-    #                     Scr = row['Score']
-    #                     feature_imp_sum.loc[0, Feat] += Scr*Imp
-
-    #             best_set = feature_imp_sum.transpose().sort_values(by=0).iloc[-5:].index
-    #             best_set_importances = feature_imp_sum.transpose().sort_values(by=0).iloc[-5:].values
-    #             Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, Normalization_methods[normFlag_nm],feature_nm, best_set, best_set_importances] 
-
-
-    print('\n\n\n END OF FIRST CV WITH FS')
-    breakpoint()
-##########################################################################333333
-    
-    # NO CV for modeling and validation -> (we use valid and train) as train and we validate with test 
-    X_train = X
-    y_train = y
-
-    if TARGET_TY == 'classes' or TARGET_TY == 'boolean': #quick solve for HDwithCM, solve in general!!!
-        y_train = y_train.astype(int)
-        Y_TEST = Y_TEST.astype(int)
-
-    ### Step 4: NORMALIZATION ###
-    for N_FLAG in NORM_FLAGS:
-        print('    normalization '+str(N_FLAG))
-        X_trainN = DprepNcleaning.data_normF(X_train, FLAG=N_FLAG) 
-        X_testN = DprepNcleaning.data_normF(X_TEST, FLAG=N_FLAG) 
-
-        ### Step 1: Feature Engeeniring ###
-        for F_FLAG in FEATURE_FLAGS:
-            print('    F_flag '+str(Feature_methods[F_FLAG]))
-
-            ### Step 3: Model selection ###
-            for model_name in model_stack:
-                print('     model '+str(model_name))
-                current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Best set'].values.tolist()[0]
-                importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Importances Custom'].values[0]
-
-                indexes4X = []
-                for idxCF in range(len(current_Features)):
-                    indexes4X.append(DATA.loc[:, DATA.columns != TARGET_COLUMN].columns.get_loc(current_Features[idxCF]))
-                
-                X_trainR = X_train[:, indexes4X]
-                X_testR = X_testN[:, indexes4X]
-
-                
-                
-                operation_counter = operation_counter+1
-                if PROGRESS_BAR:
-                    print('Progresion in training: '+str( round((operation_counter/number_operations)*100) )+'%, the time is: ', end='')  
-                    end_time = time.time()
-                    total_seconds = end_time-start_time
-                    minutes = int(total_seconds // 60)
-                    seconds = int(total_seconds % 60)
-                    print('{minutes}:{seconds}'.format(minutes=minutes, seconds=seconds)+' minutes.')
-
-                ### Step 5: Model Building 
-                model = auxiliary_fun.model_dashboard(model_name)
-                # if F_FLAG==2:
-                    # breakpoint()
-                model.fit(X_trainR, y_train)
-                # ALL_TRAINED_MODELS.append(model)
-                prediction = model.predict(X_testR)
-                
-
-                # from sklearn.metrics import RocCurveDisplay
-                # RocCurveDisplay.from_predictions(y_valid, model.predict_proba(X_validR)[:,1])
-
-                # define values in case we dont estimeate them (continues case 4 example)
-                accurecy = np.nan
-                Specifity = np.nan
-                tpr = np.nan
-                fpr = np.nan
-                auc = np.nan
-                Recall = np.nan
-                F1 = np.nan
-                CoMtx = np.nan
-                brier_score = np.nan
-
-                if TARGET_TY == 'boolean' or TARGET_TY == 'classes':
-                    classes_of_target = np.unique(y)
-                    CoMtx = confusion_matrix(Y_TEST, prediction, labels=list(classes_of_target))  #ADD LABELS TO MATRIX (MAKE IT DF)
-                    accurecy = np.sum(np.diag(CoMtx))/len(prediction)
-                    accurecy = accurecy*100
-                    if TARGET_TY == 'boolean':
-                        TP = CoMtx[0,0]
-                        TP_FN = np.sum(CoMtx[0,:])
-                        Recall = TP/TP_FN
-                        TN = CoMtx[1,1]
-                        TN_FP = CoMtx[1,:]
-                        Specifity = TN/np.sum(TN_FP)
-                        Specifity = (1-Specifity)*100
-                        F1 = 2*(accurecy*Recall)/((accurecy+Recall))
-
-                        metrics_result = auxiliary_fun.computemetrics(model, X_testR, Y_TEST)
-                        tpr = metrics_result['roc_curve'][1]
-                        fpr = metrics_result['roc_curve'][0]
-                        auc = metrics_result['roc_curve'][2]
-                        # from sklearn.metrics import RocCurveDisplay
-                        # from sklearn import metrics
-                        # metrics.confusion_matrix
-                        # fpr, tpr, thresholds = metrics.roc_curve(y_valid, model.predict_proba(X_validR)[:,1])
-                        # auc = metrics.auc(fpr, tpr)
-                        # RocCurveDisplay.from_predictions(y_valid, model.predict_proba(X_validR)[:,1]) #plt figure
-
-                        ### brier score loss ###
-                        prediction_proba = model.predict_proba(X_testR)
-                        prediction_proba_positive_clase = prediction_proba[:,1] 
-                        brier_score = brier_score_loss(Y_TEST, prediction_proba_positive_clase)
-                model_return.loc[len(model_return.index)] = [TARGET_COLUMN, TARGET_TY, model_name, 
-                                                             Normalization_methods[N_FLAG], Feature_methods[F_FLAG], current_Features, importances, 
-                                                             number_of_splits, shift_idx, CoMtx, 
-                                                             tpr, fpr, Recall, F1, auc, model.score(X_testR, Y_TEST), brier_score] 
-    # breakpoint()
-
-    # scores_models = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method','Feature used', 'Importances', 'Score' ])
-
-    # for model_nm in model_stack:
-    #     for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
-    #         for normFlag_nm in NORM_FLAGS:
-    #             feat_used = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')['Features used'].to_list()[0]
-    #             imp_used = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')['importances'].to_list()[0]
-    #             score_rt = model_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')['Score']
-                
-    #             scores_models.loc[len(scores_models.index)] = [model_nm, Normalization_methods[normFlag_nm], feature_nm, feat_used, imp_used, score_rt] 
-    
-
-
-
-    feature_data = model_return.loc[model_return.groupby('Model name')['Score'].idxmax()][['Model name', 'Feature selection method', 'Normalization method', 'Features used', 'importances']]
-    # feature_data = pd.DataFrame(columns = ['Feature method', 'Feature', 'Score' ])
-    # for model_nm in model_stack:
-        # for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
-            # for normFlag_nm in Normalization_methods:
-            # Feature method        Feature     Score
-
-
-    # fig_features, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(3, 2)
-    # ax1.bar(feature_data[feature_data['Feature method']==Feature_methods[0]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[0]]['Score'], color=colors_plot[0])
-
-
-
-
-
-    # fig_features, axs = plt.subplots(3, 2, figsize=(12, 10))
-    # ax1, ax2, ax3, ax4, ax5, ax6 = axs.flatten()
-
-    # ax1.bar(feature_data.iloc[0]['Features used'], feature_data.iloc[0]['importances'])
-    # ax2.bar(feature_data.iloc[1]['Features used'], feature_data.iloc[1]['importances'])
-    # ax3.bar(feature_data.iloc[2]['Features used'], feature_data.iloc[2]['importances'])
-    # ax4.bar(feature_data.iloc[3]['Features used'], feature_data.iloc[3]['importances'])
-    # ax5.bar(feature_data.iloc[4]['Features used'], feature_data.iloc[4]['importances'])
-    # ax6.bar(feature_data.iloc[5]['Features used'], feature_data.iloc[5]['importances'])
-
-
-
-
-
-
-    number_of_models = len(model_stack)  # or any other number
-
-    nrows = 2 if number_of_models > 3 else 1
-    ncols = math.ceil(number_of_models / nrows)
-
-    fig_features, axs = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4 * nrows))
-
-
-
-
-
-    # fig_features, axs = plt.subplots(3, 2, figsize=(14, 10))  # or any size you want
-    axs = axs.flatten()  # Flatten to get a list: [ax1, ax2, ..., ax6]
-
-    for i, ax in enumerate(axs):
-        current_model = feature_data.iloc[i]
-        ax.bar(current_model['Features used'], current_model['importances'])
-        ax.set_title(current_model['Model name'])
-        ax.set_xticklabels(features, rotation=45, ha='right')
-
-
-    plt.savefig('features.png')
-
-    breakpoint()
-
-##########################################################################
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-    
-
-    feature_data = pd.DataFrame([]) 
-    Feature_methods = ['Intrinsic method','Filter method','Wrapper method']
-    for idx in range(len(IMPORTANCES_OUT)):
-        list_of_tuples = list(zip(CURRENT_FEATURES_OUT[idx], IMPORTANCES_OUT[idx]))
-        aux = pd.DataFrame(list_of_tuples, columns=['Feature', 'Score'])
-        aux.insert(0, 'Feature method', Feature_methods[idx]) 
-        feature_data = pd.concat([feature_data,aux],ignore_index=True) 
-  
-    
-    if Fast == False:
-        fig_features, (ax1, ax2, RandomForestClassifierax3) = plt.subplots(3, 1)
-        ax3.bar(feature_data[feature_data['Feature method']==Feature_methods[2]]['Feature'], feature_data[feature_data['Feature method']==Feature_methods[2]]['Score'], color=colors_plot[0])
-        ax3.set_ylim(0, 1)
-    else: fig_features, (ax1, ax2) = plt.subplots(2, 1)
-=======
-    
->>>>>>> FS_opt
 
     # 1 SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
     Feat_best_set = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method', 'Best set', 'Importances Custom', 'Score' ])
@@ -618,5 +328,3 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
         sns.boxplot(data=model_return, x="Model name", y="Score")
 
     return model_return, model_stack, fig_FEAT, fig_CM, fig_ROC, fig_score
-
-
