@@ -15,6 +15,7 @@ from System.Auxiliary import auxiliary_fun
 from System.Modules import DprepNcleaning
 from System.Modules import eda
 from System.Modules import Mbuilding
+from sklearn.model_selection import train_test_split
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -261,9 +262,10 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                                 gr.Label(text_output_1+TARGET_TYPE.upper()+text_output_2, show_label=False)
                                 gr.Label(text_output_3, show_label=False)
                             fig_target = plt.figure()
-                            # sns.histplot(data=DATA[TARGET_COLUMN], kde=True, stat='percent')
-                            # plt.title('Histogram of distribution of target variable')
-                            px.bar(DATA, x=TARGET_COLUMN)
+                            sns.histplot(data=DATA[TARGET_COLUMN], kde=True, stat='percent')
+                            plt.title('Histogram of distribution of target variable')
+                            # px.bar(DATA, x=TARGET_COLUMN)
+                            # breakpoint()
                             gr.Plot(fig_target, show_label=False, scale = 1)
 
 
@@ -281,7 +283,18 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         global DATA_cleaned
                         global DROP_COL
                         global DROP_ROW
+                        global X_test
+                        global y_test
+
                         DATA_cleaned, DROP_COL, DROP_ROW = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
+
+                        X = DATA_cleaned.loc[:, DATA_cleaned.columns != TARGET_COLUMN]
+                        y = DATA_cleaned[TARGET_COLUMN]
+                        X_data, X_test, y_data, y_test = train_test_split(X, y, test_size=0.1, shuffle = True)
+                        DATA_cleaned = pd.concat([y_data, X_data], axis=1)
+
+                        print(X_test)
+                        print(y_test)
 
                     if SCEWED_FLAG == True:
                         scewed_yes_no_btn = gr.Radio(["Yes", "No"], label="Cast to boolean (once selected there is no undo):")
@@ -321,8 +334,18 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     global DATA_cleaned
                     global DROP_COL
                     global DROP_ROW
+                    global X_test
+                    global y_test
+
                     DATA_cleaned, DROP_COL, DROP_ROW = DprepNcleaning.data_cleaning(DATA_casted, min_porcentage_col = 10, min_porcentage_row = 0)
 
+                    X = DATA_cleaned.loc[:, DATA_cleaned.columns != TARGET_COLUMN]
+                    y = DATA_cleaned[TARGET_COLUMN]
+                    X_data, X_test, y_data, y_test = train_test_split(X, y, test_size=0.1, shuffle = True)
+                    DATA_cleaned = pd.concat([y_data, X_data], axis=1)
+
+                    print(X_test)
+                    print(y_test)
                     #aca tengo q descastear y mandar a eda
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
 
@@ -344,8 +367,8 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                     gr.DataFrame(missing4rows, interactive='False')
 
                     ### Step 3.2: Exploratory Data Analyzis (AUTO)###
-                    dtale.show(DATA) 
-                    dtale.show(open_browser=True)
+                    # dtale.show(DATA) 
+                    # dtale.show(open_browser=True)
                     # dtale.show()
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
@@ -395,27 +418,38 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
                         ### Step 5: Model Building       
                     global model_list
                     global model_info
-                    model_info, model_list, figure_features, fig_ROC, disp = Mbuilding.model_shake(DATA_cleaned, TARGET_COLUMN, TARGET_TYPE, Fast = False)                    
+                    # breakpoint()
+                    # X = DATA_cleaned.copy()
+                    # X = X.drop(TARGET_COLUMN, axis=1)
+
+                    # breakpoint()
+                    # X = DATA_cleaned.loc[:, DATA_cleaned.columns != TARGET_COLUMN]
+                    # y = DATA_cleaned[TARGET_COLUMN]
+                    # X_data, X_test, y_data, y_test = train_test_split(X, y, test_size=0.1, shuffle = True)
+                    # DATA_cleaned = pd.concat([y_data, X_data], axis=1)
+                    # breakpoint()
+
+                    model_info, model_list, figure_features, fig_cm, fig_roc, fig_score= Mbuilding.model_shake(DATA = DATA_cleaned, X_TEST=X_test.to_numpy(),  Y_TEST=y_test.to_numpy(), TARGET_COLUMN = TARGET_COLUMN, TARGET_TY = TARGET_TYPE, Fast = True)                    
                     gr.DataFrame(model_info.drop(['Target column', 'Target type'], axis=1).dropna(axis='columns'), label="Table with information of the trained models:", scale=1, interactive='False')
 
                     with gr.Row():
                         gr.Plot(figure_features, show_label=False, scale = 1)
                         if TARGET_TYPE == 'boolean':
-                            gr.Plot(fig_ROC, show_label=False)
-                            gr.Plot(disp, show_label=False)
+                            gr.Plot(fig_roc, show_label=False)
+                            gr.Plot(fig_cm, show_label=False)
 
-                    return_model = sns.lmplot(data=model_info.rename(columns={'Normalization method':'Norm.', 'Feature selection method':'Feat.'}), 
-                                              x="Cross-validation ID", 
-                                              y="Score", 
-                                              row="Norm.", 
-                                              col="Feat.", 
-                                              hue='Model name',
-                                              palette="crest", 
-                                              ci=None,height=4, 
-                                              scatter_kws={"s": 50, "alpha": 1}) 
-                    figure_return = return_model.fig  
+                    # return_model = sns.lmplot(data=model_info.rename(columns={'Normalization method':'Norm.', 'Feature selection method':'Feat.'}), 
+                    #                           x="Cross-validation ID", 
+                    #                           y="Score", 
+                    #                           row="Norm.", 
+                    #                           col="Feat.", 
+                    #                           hue='Model name',
+                    #                           palette="crest", 
+                    #                           ci=None,height=4, 
+                    #                           scatter_kws={"s": 50, "alpha": 1}) 
+                    # figure_return = return_model.fig  
                     with gr.Row():
-                        gr.Plot(figure_return, show_label=False)
+                        gr.Plot(fig_score, show_label=False)
 
 
 ##########################    ##########################    ##########################    ##########################    ##########################    ##########################
@@ -512,5 +546,5 @@ with gr.Blocks(css=css, theme=gr.themes.Soft(primary_hue=ing_bio_green,secondary
 
                     
 # Launch the Gradio interface
-demo.launch(share=True)
-# demo.launch()
+# demo.launch(share=True)
+demo.launch()

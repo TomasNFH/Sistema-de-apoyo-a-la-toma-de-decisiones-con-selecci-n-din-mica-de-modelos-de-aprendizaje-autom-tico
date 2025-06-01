@@ -8,7 +8,7 @@ import cutie
 
 
 
-def d_acquisition(FILE_SELECTED = -1):
+def d_acquisition(FILE_SELECTED = -1, interaction = True):
 
     files = []
     names = [] #just the name to print
@@ -18,24 +18,26 @@ def d_acquisition(FILE_SELECTED = -1):
             files.append(os.path.join(dirname, filename))    
             names.append(filename) 
 
-    # # Digit implementation
-    # if FILE_SELECTED == -1: #if ==-1 ask for the idx
-    #     print(colored('The possible files to load are: \n', 'black', attrs=['bold']))
+    if interaction:
+        # Menu implementation
+        if FILE_SELECTED == -1:
+            print(colored('The possible files to load are: \n', 'green', attrs=['bold']))
+            captions = []
+            name = names[cutie.select(names, caption_indices=captions, selected_index=0)]
+            res_list = [i for i, value in enumerate(names) if value == name]
+            print(int(res_list[0]))
+            FILE_SELECTED = int(res_list[0])
 
-    #     for file_idx,name in enumerate(names):
-    #           print('----> File number '+str(file_idx)+': '+str(name)) 
-    #     FILE_SELECTED = int(input("\n\nDigit the file number: "))
-    # print('File selected is: '+str(files[FILE_SELECTED]))
-    
-    # Menu implementation
-    if FILE_SELECTED == -1:
-        print(colored('The possible files to load are: \n', 'green', attrs=['bold']))
-        captions = []
-        name = names[cutie.select(names, caption_indices=captions, selected_index=0)]
-        res_list = [i for i, value in enumerate(names) if value == name]
-        print(int(res_list[0]))
-        FILE_SELECTED = int(res_list[0])
-    
+    else:
+        # Digit implementation
+        if FILE_SELECTED == -1: #if ==-1 ask for the idx
+            print(colored('The possible files to load are: \n', 'black', attrs=['bold']))
+
+            for file_idx,name in enumerate(names):
+                print('----> File number '+str(file_idx)+': '+str(name)) 
+            FILE_SELECTED = int(input("\n\nDigit the file number: "))
+        print('File selected is: '+str(files[FILE_SELECTED]))
+
     # data type verification
     if files[FILE_SELECTED][len(files[FILE_SELECTED])-5:] == '.xlsx':
         DATA = pd.read_excel(files[FILE_SELECTED])
@@ -45,25 +47,31 @@ def d_acquisition(FILE_SELECTED = -1):
     return DATA
 
 
-def var_acquisition(DATA, COLUMN_SELECTED_IDX=-1, CHECK=True):
+
+
+
+def var_acquisition(DATA, COLUMN_SELECTED_IDX=-1, CHECK=True, interaction = True):
     
     scewed_check = 0 #FLAG that of the scewed question in 3.2 -- by def is set to FALSE
     
-    # Digit implementation
-    # if COLUMN_SELECTED_IDX==-1: #!!!!!!!!!Agregar a menu
-    #     print('\nPlease select the varaible to predict from the next list: ')
-    #     for col_idx,column in enumerate(DATA.columns):
-    #         print('   '+str(col_idx)+') '+str(column))
-    #     COLUMN_SELECTED_IDX = int(input("----> "))
+    if interaction:
+        # Menu implementation
+        if COLUMN_SELECTED_IDX==-1:
+            print(colored('\nPlease select the varaible to predict from the next list: ', 'green', attrs=['bold']))
+            captions = []
+            names = list(list(DATA.columns))  #cast column names into list to menu
+            name = names[cutie.select(names, caption_indices=captions, selected_index=0)]
+            res_list = [i for i, value in enumerate(names) if value == name]
+            COLUMN_SELECTED_IDX = int(res_list[0])
+    
+    else:
+        #Digit implementation
+        if COLUMN_SELECTED_IDX==-1: #!!!!!!!!!Agregar a menu
+            print('\nPlease select the varaible to predict from the next list: ')
+            for col_idx,column in enumerate(DATA.columns):
+                print('   '+str(col_idx)+') '+str(column))
+            COLUMN_SELECTED_IDX = int(input("----> "))
 
-    # Menu implementation
-    if COLUMN_SELECTED_IDX==-1:
-        print(colored('\nPlease select the varaible to predict from the next list: ', 'green', attrs=['bold']))
-        captions = []
-        names = list(list(DATA.columns))  #cast column names into list to menu
-        name = names[cutie.select(names, caption_indices=captions, selected_index=0)]
-        res_list = [i for i, value in enumerate(names) if value == name]
-        COLUMN_SELECTED_IDX = int(res_list[0])
     TARGET_COLUMN = DATA.columns[COLUMN_SELECTED_IDX] #the column name (is a string)
     print('Target column is: '+str(TARGET_COLUMN)+'\n')
 
@@ -91,17 +99,19 @@ def var_acquisition(DATA, COLUMN_SELECTED_IDX=-1, CHECK=True):
     if len(target_col_values) == 2 and len(unique_values)!=2:
         print(SCEWED_TARGET_COL) ### we could add a graph instead of a table ##
         
-        # Digit implementation
-        # print('As the Table shows, the predicted column concentrate in only two values ('+str(target_col_values[0])+' and '+str(target_col_values[1])+'), do you want to only use this? (1=YES/ 0=NO)')
-        # scewed_check = int(input("----> "))
+        if interaction:
+            # Menu implementation
+            scewed_check = cutie.prompt_yes_or_no("As the Table shows, the predicted column concentrate in only two values ("+str(target_col_values[0])+' and '+str(target_col_values[1])+"), do you want to only use this?")
+            if scewed_check: #if TRUE we cast to boolean
+                TARGET_TYPE = 'boolean'
+                for drop_val in drop_target_col_values:
+                    drop_row = DATA[TARGET_COLUMN][DATA[TARGET_COLUMN]==drop_val].index ####arrregalarrrrrrrrrrr!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    DATA = DATA.drop(drop_row)
 
-        # Menu implementation
-        scewed_check = cutie.prompt_yes_or_no("As the Table shows, the predicted column concentrate in only two values ("+str(target_col_values[0])+' and '+str(target_col_values[1])+"), do you want to only use this?")
-        if scewed_check: #if TRUE we cast to boolean
-            TARGET_TYPE = 'boolean'
-            for drop_val in drop_target_col_values:
-                drop_row = DATA[TARGET_COLUMN][DATA[TARGET_COLUMN]==drop_val].index ####arrregalarrrrrrrrrrr!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                DATA = DATA.drop(drop_row)
+        else:
+            #Digit implementation
+            print('As the Table shows, the predicted column concentrate in only two values ('+str(target_col_values[0])+' and '+str(target_col_values[1])+'), do you want to only use this? (1=YES/ 0=NO)')
+            scewed_check = int(input("----> "))
                 
     ### 3.2 Coff of unique check     
     R = len(unique_values)/len_target_col #coeficient of number of unique in relation to number of rows
@@ -117,36 +127,46 @@ def var_acquisition(DATA, COLUMN_SELECTED_IDX=-1, CHECK=True):
             
     #if we find a match <!=Not identify>, we check if is it right (if check is TRUE)
     if TARGET_TYPE != 'Not identify' and CHECK: #take it depending if is boolean or classes
+
+        print(colored('\nThe target column type is ', 'black', attrs=['bold']), end='')
+
         if TARGET_TYPE == 'continuous': #print depending of target typr
-            print(colored('\nThe target column type is ', 'black', attrs=['bold']), end='')
+            # regression case
             print(colored(TARGET_TYPE, 'green', attrs=['bold']), end='')
             print(colored(', the elements are:', 'black', attrs=['bold']))
-        else: #discrete case
-            print(colored('\nThe target column type is ', 'black', attrs=['bold']), end='')
+
+            for unique_element in DATA[TARGET_COLUMN].unique(): 
+                print(colored(str(unique_element)+' ', 'green', attrs=['bold']), end='')
+
+        
+        else: 
+            # classification case
             print(colored('discrete (', 'green', attrs=['bold']), end='')
             print(colored(TARGET_TYPE, 'green', attrs=['bold']), end='')
             print(colored(')', 'green', attrs=['bold']), end='')
             print(colored(', the classes are:', 'black', attrs=['bold']))
-        if TARGET_TYPE == 'boolean': print(colored(DATA[TARGET_COLUMN].unique(), 'green', attrs=['bold']))
-        for unique_element in DATA[TARGET_COLUMN].unique(): 
-            print(colored(str(unique_element)+' ', 'green', attrs=['bold']), end='')
+            print(colored(DATA[TARGET_COLUMN].unique(), 'green', attrs=['bold']))
 
-        # Digit implementation
-        # print(colored('\n is this the type you want? (1=YES/ 0=NO)', 'black', attrs=['blink']))
-        # type_check = int(input("----> "))
+        if interaction:
+            # Menu implementation
+            type_check = cutie.prompt_yes_or_no("Is this the type you want?")
 
-        # Menu implementation
-        type_check = cutie.prompt_yes_or_no("Is this the type you want?")
-        
+        else:
+            # Digit implementation
+            print(colored('\n is this the type you want? (1=YES/ 0=NO)', 'black', attrs=['blink']))
+            type_check = int(input("----> "))
+
         if type_check != 1:
             if TARGET_TYPE == 'continuous':
 
-                # Digit implementation
-                print(colored('Do you want to convert the variable type to <classes> ? (1=YES/ 0=NO)', 'black', attrs=['blink']))
-                cast_classes_check = int(input("----> "))
-                
-                # Menu implementation
-                cast_classes_check = cutie.prompt_yes_or_no("Do you want to convert the variable type to <classes> ?")
+                if interaction:
+                    # Menu implementation
+                    cast_classes_check = cutie.prompt_yes_or_no("Do you want to convert the variable type to <classes> ?")
+                else: 
+                    # Digit implementation
+                    print(colored('Do you want to convert the variable type to <classes> ? (1=YES/ 0=NO)', 'black', attrs=['blink']))
+                    cast_classes_check = int(input("----> "))
+
                 if cast_classes_check == 1:
                     print('Number of unique '+str(len(unique_values))+' of ' +str(len_target_col))
                     ###AUTORANGE #we already use ID and not the real value, we need to RECAST LATER
@@ -173,3 +193,7 @@ def var_acquisition(DATA, COLUMN_SELECTED_IDX=-1, CHECK=True):
         print('USER SELECT THE TARGET COLUMN TYPE')
 
     return DATA, TARGET_COLUMN, TARGET_TYPE, SCEWED_TARGET_COL
+
+
+
+

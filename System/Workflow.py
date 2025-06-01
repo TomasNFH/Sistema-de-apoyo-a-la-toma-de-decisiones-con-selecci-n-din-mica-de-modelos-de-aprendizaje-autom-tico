@@ -13,10 +13,17 @@ from sklearn.model_selection import train_test_split
 
 def dyn_model_selection(data = pd.DataFrame(), file_selected=-1, column_selected=-1, FAST = True, PLOT = True, local_file = False):
     
+    itcn = True #true menu/ false digit
+
+    Server = False
+    if Server:
+        itcn = False
+        local_file = False
+
         ### Step 1: Data acquisition ###
     if len(data)==0:
-        data = Dacquisition.d_acquisition(file_selected)
-    data, target_column, target_type, scewed_target_col = Dacquisition.var_acquisition(data, column_selected, CHECK=True) #tema de dataNaN y dataCLEAN juntar
+        data = Dacquisition.d_acquisition(file_selected, itcn)
+    data, target_column, target_type, scewed_target_col = Dacquisition.var_acquisition(data, column_selected, CHECK=True, interaction=itcn) #tema de dataNaN y dataCLEAN juntar
 
         ### Step 2: Data cast ###  
     data, rosseta = auxiliary_fun.d_cast(data, target_column)

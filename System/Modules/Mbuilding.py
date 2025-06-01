@@ -16,6 +16,7 @@ import math
 
 def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     PROGRESS_BAR = True
+    ALL_TRAINED_MODELS = []
 
     start_time = time.time()
     colors_plot = ['#309284', '#337AEF']
@@ -177,7 +178,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
                 # if F_FLAG==2:
                     # breakpoint()
                 model.fit(X_trainR, y_train)
-                # ALL_TRAINED_MODELS.append(model)
+                ALL_TRAINED_MODELS.append(model)
                 prediction = model.predict(X_testR)
                 
 
@@ -327,4 +328,4 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
         fig_score = plt.figure()
         sns.boxplot(data=model_return, x="Model name", y="Score")
 
-    return model_return, model_stack, fig_FEAT, fig_CM, fig_ROC, fig_score
+    return model_return, ALL_TRAINED_MODELS, fig_FEAT, fig_CM, fig_ROC, fig_score
