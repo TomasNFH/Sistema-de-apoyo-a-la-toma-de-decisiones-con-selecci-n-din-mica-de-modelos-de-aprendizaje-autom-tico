@@ -249,7 +249,7 @@ def unique_to_int_reverse(data_in, column_name, uniqueVAL, id_unique):
 
 
 def computemetrics(model, X_test, y_test):
-
+    # breakpoint()
     y_pred = model.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred)
     #report fow each unique class (+ avg)

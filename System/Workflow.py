@@ -46,19 +46,15 @@ def dyn_model_selection(data = pd.DataFrame(), file_selected=-1, column_selected
     X_data, X_test, y_data, y_test = train_test_split(X, y, test_size=0.1, shuffle = True)
     data = pd.concat([y_data, X_data], axis=1)
 
-    model_info, trained_models, fig1, fig2, fig3 = Mbuilding.model_shake(DATA=data, TARGET_COLUMN=target_column, TARGET_TY=target_type, Fast = FAST)
-    model_info = model_info.rename(columns={'Normalization method': 'NM', 'Feature selection method': 'FSM'})
-    sns.lmplot(
-        data=model_info, x="Cross-validation ID", y="Score", row="NM", col="FSM", hue='Model name',
-        palette="crest", ci=None,
-        height=4, scatter_kws={"s": 50, "alpha": 1}
-    )
-    if PLOT and local_file: 
-        plt.show()
-        plt.savefig('Output/accuracy.png')
-        fig1.savefig('Output/features.png')
-        if fig2!=0: fig2.savefig('Output/AUC.png')
-        if fig3!=0: fig3.savefig('Output/MConf.png')
+    model_info, _, fig_feat, fig_cm, fig_roc, fig_score = Mbuilding.model_shake(DATA=data, X_TEST=X_test.to_numpy(),  Y_TEST=y_test.to_numpy(), TARGET_COLUMN=target_column, TARGET_TY=target_type, Fast = FAST)
+    
+    if local_file: 
+        # plt.savefig('Output/accuracy.png')
+        fig_feat.savefig('Output/features.png')
+        if fig_cm!=0: fig_cm.savefig('Output/AUC.png')
+        if fig_roc!=0: fig_roc.savefig('Output/MConf.png')
+        if fig_score!=0: fig_score.savefig('Output/Score.png')
+    if PLOT: plt.show()
 
     return model_info
 

@@ -13,7 +13,6 @@ def F_selector(X_train, y_train, N_features=5, FLAG=0):
     input: X_train, y_train - used for training
     return:
     '''
-
     if FLAG == 2: 
         if X.shape[1]>N_features: Mf = N_features
         else: Mf = X.shape[1]
@@ -36,7 +35,7 @@ def F_selector(X_train, y_train, N_features=5, FLAG=0):
     else:
         if FLAG == 0:
             model = RandomForestRegressor()
-            model.fit(X_train, y_train)
+            model.fit(X_train.to_numpy(), y_train.to_numpy().ravel())
             importances = model.feature_importances_ #puedo cambiar el impurity de Gini a otro, probar
         if FLAG == 1:
             # breakpoint()
