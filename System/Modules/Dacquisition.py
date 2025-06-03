@@ -9,7 +9,16 @@ import cutie
 
 
 def d_acquisition(FILE_SELECTED = -1, interaction = True):
+    """
+    Loads a dataset file from the 'Input' directory using an interactive menu or index selection.
+    
+    Parameters:
+        FILE_SELECTED (int): Index of file to load. If -1, prompts user.
+        interaction (bool): Whether to use interactive selection or manual input.
 
+    Returns:
+        pd.DataFrame: Loaded dataset.
+    """
     files = []
     names = [] #just the name to print
     # for dirname, _, filenames in os.walk(r'C:\Users\tomas\Pasantia\Input'):
@@ -51,7 +60,21 @@ def d_acquisition(FILE_SELECTED = -1, interaction = True):
 
 
 def var_acquisition(DATA, COLUMN_SELECTED_IDX=-1, CHECK=True, interaction = True):
-    
+    """
+    Selects and analyzes the target variable from a dataset.
+
+    Parameters:
+        DATA (pd.DataFrame): The dataset.
+        COLUMN_SELECTED_IDX (int): Index of target column. If -1, asks the user.
+        CHECK (bool): Whether to confirm target type with user.
+        interaction (bool): Use interactive mode.
+
+    Returns:
+        DATA (pd.DataFrame): Dataset with cleaned target column.
+        TARGET_COLUMN (str): Selected target column name.
+        TARGET_TYPE (str): One of ['boolean', 'classes', 'continuous'].
+        TARGET_DISTRIBUTION_TABLE (pd.DataFrame): Distribution of values in target.
+    """    
     scewed_check = 0 #FLAG that of the scewed question in 3.2 -- by def is set to FALSE
     
     if interaction:
