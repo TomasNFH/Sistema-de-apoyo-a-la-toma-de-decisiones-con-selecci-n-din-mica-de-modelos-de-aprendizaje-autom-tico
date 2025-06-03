@@ -6,7 +6,19 @@ import pandas as pd
 
 
 def data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0):
+    """
+    Cleans a DataFrame by removing columns and rows based on missing value percentage thresholds.
 
+    Parameters:
+        data (pd.DataFrame): Input dataset.
+        min_percentage_col (float): Max allowed percentage of missing values per column.
+        min_percentage_row (float): Max allowed percentage of missing values per row.
+
+    Returns:
+        cleaned_data (pd.DataFrame): Cleaned dataset.
+        dropped_columns (pd.Series): Names of dropped columns.
+        dropped_rows (pd.Series): Indexes of dropped rows.
+    """
     manualEDA, missing4rows = eda.ManualEDAfun(data)
     # drop ror & col by missing (%)
     drop_col = manualEDA[manualEDA['Missing (%)']>min_porcentage_col]['Column name'] 
@@ -33,9 +45,19 @@ def data_cleaning(data, min_porcentage_col = 10, min_porcentage_row = 0):
     return data, drop_col, drop_row
 
 def data_normF(data, FLAG=1):
-    
+    """
+    Normalizes a DataFrame using Min-Max or Z-score normalization.
 
-    
+    Parameters:
+        data (pd.DataFrame): Input data to normalize.
+        method (int): Normalization method:
+                      0 - No normalization,
+                      1 - Min-Max scaling,
+                      2 - Z-score standardization.
+
+    Returns:
+        normalized_data (np.ndarray): Normalized data as numpy array.
+    """   
     # breakpoint()
     # data_norm = data
     ### BYPASS NORMALIZATION ###
@@ -58,8 +80,15 @@ def data_normF(data, FLAG=1):
         #     data_norm.insert(len(data.columns)-1, col, X_norm_arr[:,idx], True)
         
     
-    # print(pd.DataFrame(data).describe())
-    # print(pd.DataFrame(data_norm).describe())
-    # breakpoint()
+
+
+
+    # if method == 0:
+    #     return data
+
+    # scaler = MinMaxScaler() if method == 1 else StandardScaler()
+    # normalized_data = scaler.fit_transform(data)
+
+
     return data_norm
 
