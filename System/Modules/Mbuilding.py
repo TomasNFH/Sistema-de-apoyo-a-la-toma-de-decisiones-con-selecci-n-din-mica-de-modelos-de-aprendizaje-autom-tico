@@ -15,6 +15,31 @@ import math
 
 
 def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
+    """
+    Comprehensive modeling pipeline that performs normalization, feature selection,
+    model training, evaluation, and visualization.
+
+    Parameters:
+        X (pd.DataFrame): Feature matrix.
+        y (pd.Series or pd.DataFrame): Target variable.
+        N_features (int): Number of features to select during feature selection.
+        fs_method (int): Feature selection method:
+            0 - Random Forest feature importance
+            1 - Correlation-based selection
+            2 - Exhaustive Feature Selector (EFS) with Logistic Regression
+        problem_type (str): Type of problem. Must be 'classification' or 'regression'.
+        model_list (list, optional): List of sklearn models to evaluate. If None, uses defaults.
+        normalize (bool): Whether to normalize the data before modeling. Default is True.
+        verbose (bool): Whether to print detailed output during execution. Default is True.
+        plot_results (bool): Whether to display evaluation plots. Default is True.
+
+    Returns:
+        results_df (pd.DataFrame): Performance metrics for each trained model.
+        best_model (sklearn model): Trained model with the best performance.
+        selected_features (pd.Index): Names of the selected features.
+        X_selected (np.ndarray): Feature matrix after selection and normalization (if applied).
+        y (pd.Series or np.ndarray): Target variable (possibly transformed if classification).
+    """
     PROGRESS_BAR = True
     ALL_TRAINED_MODELS = []
 
