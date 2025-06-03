@@ -58,9 +58,10 @@ def dyn_model_selection(data = pd.DataFrame(), file_selected=-1, column_selected
     if local_file: 
         # plt.savefig('Output/accuracy.png')
         fig_feat.savefig('Output/features.png')
-        if fig_cm!=0: fig_cm.savefig('Output/AUC.png')
-        if fig_roc!=0: fig_roc.savefig('Output/MConf.png')
-        if fig_score!=0: fig_score.savefig('Output/Score.png')
+        if fig_cm!=0: fig_cm.savefig('Output/CM.png')
+        if fig_roc!=0: fig_roc.savefig('Output/ROC.png')
+        if fig_score!=0: fig_score.savefig('Output/Score.png', bbox_inches='tight')
+        # plt.savefig('my_plot.png', bbox_inches='tight')
     if PLOT: plt.show()
 
     return model_info

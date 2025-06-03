@@ -334,7 +334,8 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
             fig_ROC.tight_layout(pad=3.5)
 
             fig_score = plt.figure()
-            sns.boxplot(data=model_return, x="Model name", y="AUC")
+            # sns.boxplot(data=model_return, x="Model name", y="AUC")
+            sns.boxplot(data=model_return, y="Model name", x="AUC")
 
         # classes
         else:
@@ -342,7 +343,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
             print(colored(best_model_res[['Model name', 'Normalization method', 'Feature selection method', 'True Positive Rate', 'False Positive Rate', 'Score', 'Brier score loss']], 'green'))
 
             fig_score = plt.figure()
-            sns.boxplot(data=model_return, x="Model name", y="Score")
+            sns.boxplot(data=model_return, y="Model name", x="Score")
 
 
     #recursive
@@ -351,6 +352,6 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
         print(colored(best_model_res[['Model name', 'Normalization method', 'Feature selection method', 'True Positive Rate', 'False Positive Rate', 'Score']], 'green'))
 
         fig_score = plt.figure()
-        sns.boxplot(data=model_return, x="Model name", y="Score")
+        sns.boxplot(data=model_return, y="Model name", x="Score")
 
     return model_return, ALL_TRAINED_MODELS, fig_FEAT, fig_CM, fig_ROC, fig_score

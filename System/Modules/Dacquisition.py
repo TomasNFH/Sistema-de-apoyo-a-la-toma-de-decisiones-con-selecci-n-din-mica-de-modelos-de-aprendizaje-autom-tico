@@ -124,7 +124,7 @@ def var_acquisition(DATA, COLUMN_SELECTED_IDX=-1, CHECK=True, interaction = True
         
         if interaction:
             # Menu implementation
-            scewed_check = cutie.prompt_yes_or_no("As the Table shows, the predicted column concentrate in only two values ("+str(target_col_values[0])+' and '+str(target_col_values[1])+"), do you want to only use this?")
+            scewed_check = cutie.prompt_yes_or_no("As the Table shows, the predicted column concentrate in only two values ("+str(target_col_values.values[0])+' and '+str(target_col_values.values[1])+"), do you want to only use this?")
             if scewed_check: #if TRUE we cast to boolean
                 TARGET_TYPE = 'boolean'
                 for drop_val in drop_target_col_values:
@@ -135,6 +135,30 @@ def var_acquisition(DATA, COLUMN_SELECTED_IDX=-1, CHECK=True, interaction = True
             #Digit implementation
             print('As the Table shows, the predicted column concentrate in only two values ('+str(target_col_values[0])+' and '+str(target_col_values[1])+'), do you want to only use this? (1=YES/ 0=NO)')
             scewed_check = int(input("----> "))
+
+        if interaction:
+            # Menu implementation
+            unbalance_check = cutie.prompt_yes_or_no("MAKE IT EVEN??? (unbalance target variable)")
+            if unbalance_check: 
+                min_entries = SCEWED_TARGET_COL.iloc[1,2]
+                to_much_variable = SCEWED_TARGET_COL.iloc[0, 1]
+                indexes_2_sort = DATA[TARGET_COLUMN][DATA[TARGET_COLUMN]==to_much_variable].index
+                first = DATA.loc[np.random.choice(indexes_2_sort, size=min_entries, replace=False)]
+                second = DATA[DATA[TARGET_COLUMN]==SCEWED_TARGET_COL.iloc[1, 1]]
+                DATA = pd.concat([first, second])
+
+                import seaborn as sns
+                import matplotlib.pyplot as plt 
+                plt.figure()
+                sns.histplot(DATA, x=TARGET_COLUMN)
+                plt.savefig('test.png')
+                breakpoint()
+                # for a in DATA[TARGET_COLUMN].unique():
+
+                # for drop_val in drop_target_col_values:
+                #     drop_row = DATA[TARGET_COLUMN][DATA[TARGET_COLUMN]==drop_val].index ####arrregalarrrrrrrrrrr!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                #     DATA = DATA.drop(drop_row)
+        
                 
     ### 3.2 Coff of unique check     
     R = len(unique_values)/len_target_col #coeficient of number of unique in relation to number of rows
