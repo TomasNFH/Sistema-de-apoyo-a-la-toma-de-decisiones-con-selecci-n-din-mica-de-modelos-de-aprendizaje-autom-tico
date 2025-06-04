@@ -78,6 +78,7 @@ def d_cast(DATA, TARGET_COLUMN):
         total_seconds = end_time-start_time
         minutes = int(total_seconds // 60)
         seconds = int(total_seconds % 60)
+        print()
         print('{minutes}:{seconds}'.format(minutes=minutes, seconds=seconds)+' minutes.')
 
         print('current column '+str(column))

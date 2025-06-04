@@ -47,7 +47,7 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     colors_plot = ['#309284', '#337AEF']
     fig_ROC = 0
     fig_CM = 0
-    FEATURE_N = 5 #can test to change it or make it auto to find the best N
+    FEATURE_N = 30 #can test to change it or make it auto to find the best N
     model_return = pd.DataFrame(columns = ['Target column', 'Target type', 'Model name', 
                                            'Normalization method', 'Feature selection method', 
                                            'Features used', 'importances', 'Number of splits', 'Cross-validation ID', 
@@ -141,19 +141,47 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
                                                             number_of_splits, shift_idx, model.score(X_validR, y_valid)] 
     
 
-    # 1 SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
-    Feat_best_set = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method', 'Best set', 'Importances Custom', 'Score' ])
+    # # 1 SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
+    # Feat_best_set = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method', 'Best set', 'Importances Custom', 'Score' ])
+
+    # for model_nm in model_stack:
+    #     for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
+    #         for normFlag_nm in NORM_FLAGS:
+    #             feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')[['Features used', 'Normalization method','importances', 'Score']]
+    #             best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
+    #             best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
+    #             best_set_importances = feat_n_score.sort_values(by='Score').iloc[-1]['importances']
+
+    #             Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, Normalization_methods[normFlag_nm],feature_nm, best_set, best_set_importances, best_set_score] 
+
+
+
+    # 2 SELECT FEATURES WITH CV (for now i use the set of features with higher Accuracy)
+    Feat_best_set = pd.DataFrame(columns = ['Model', 'Normalization method', 'Feature method', 'Best set', 'Importances Custom'])
 
     for model_nm in model_stack:
         for feature_nm in Feature_methods[0:len(FEATURE_FLAGS)]:
             for normFlag_nm in NORM_FLAGS:
                 feat_n_score = FS_return.query('`Model name` == @model_nm and `Feature selection method` == @feature_nm and `Normalization method` == @Normalization_methods[@normFlag_nm]')[['Features used', 'Normalization method','importances', 'Score']]
-                best_set = feat_n_score.sort_values(by='Score').iloc[-1]['Features used']
-                best_set_score = feat_n_score.sort_values(by='Score').iloc[-1]['Score']
-                best_set_importances = feat_n_score.sort_values(by='Score').iloc[-1]['importances']
+                
+                all_features = []
+                for f_list in feat_n_score['Features used'].values:
+                    all_features = all_features+f_list
+                feature_imp_sum = pd.DataFrame(columns=pd.DataFrame(all_features)[0].unique())
+                feature_imp_sum.loc[len(feature_imp_sum)] = np.zeros(len(feature_imp_sum.columns))
 
-                Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, Normalization_methods[normFlag_nm],feature_nm, best_set, best_set_importances, best_set_score] 
-
+                #select best set by Score and importances
+                for index, row in feat_n_score[['Features used', 'importances', 'Score']].iterrows():
+                    for idx in range(number_of_splits):
+                        # breakpoint()
+                        Feat = row['Features used'][idx]
+                        Imp = row['importances'][idx]
+                        Scr = row['Score']
+                        feature_imp_sum.loc[0, Feat] += Scr*Imp
+                # breakpoint()
+                best_set = feature_imp_sum.transpose().sort_values(by=0).iloc[-FEATURE_N:].index
+                best_set_importances = feature_imp_sum.transpose().sort_values(by=0).iloc[-FEATURE_N:].values.transpose()[0]
+                Feat_best_set.loc[len(Feat_best_set.index)] = [model_nm, Normalization_methods[normFlag_nm],feature_nm, best_set, best_set_importances] 
 
     #### MODELING AND VALIDATION ####
     # NO CV for modeling and validation -> (we use valid and train) as train and we validate with test 
@@ -177,9 +205,9 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
             ### Step 3: Model selection ###
             for model_name in model_stack:
                 print('     model '+str(model_name))
-                current_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Best set'].values.tolist()[0]
+                current_Featurescurrent_Features = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Best set'].values.tolist()[0]
                 importances = Feat_best_set.query('`Model` == @model_name and `Feature method` == @Feature_methods[@F_FLAG] and `Normalization method` == @Normalization_methods[@N_FLAG]')['Importances Custom'].values[0]
-
+                
                 indexes4X = []
                 for idxCF in range(len(current_Features)):
                     indexes4X.append(DATA.loc[:, DATA.columns != TARGET_COLUMN].columns.get_loc(current_Features[idxCF]))
@@ -265,10 +293,11 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
     fig_FEAT, axs = plt.subplots(nrows, ncols, figsize=(6 * ncols, 4 * nrows))
     axs = axs.flatten()  # Flatten to get a list: [ax1, ax2, ..., ax6]
 
+    # breakpoint()
     for i, ax in enumerate(axs):
         current_model = best_model_res.iloc[i]
         features = current_model['Features used']
-
+        
         # Plot bar
         ax.bar(features, current_model['importances'])
 
@@ -354,4 +383,5 @@ def model_shake(DATA, X_TEST, Y_TEST, TARGET_COLUMN, TARGET_TY, Fast = True):
         fig_score = plt.figure()
         sns.boxplot(data=model_return, y="Model name", x="Score")
 
+    breakpoint()
     return model_return, ALL_TRAINED_MODELS, fig_FEAT, fig_CM, fig_ROC, fig_score

@@ -152,7 +152,6 @@ def var_acquisition(DATA, COLUMN_SELECTED_IDX=-1, CHECK=True, interaction = True
                 plt.figure()
                 sns.histplot(DATA, x=TARGET_COLUMN)
                 plt.savefig('test.png')
-                breakpoint()
                 # for a in DATA[TARGET_COLUMN].unique():
 
                 # for drop_val in drop_target_col_values:
